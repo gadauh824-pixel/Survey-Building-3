@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1F3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PCS Survey</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --navy:#1F3864; --navy-d:#132547; --navy-l:#2C4A7C;
+  --orange:#D04A00; --orange-l:#EC6511;
+  --amber:#FFE4B5; --amber-t:#7F3300;
+  --lblue:#EDF2FF;
+  --g1:#F5F6FA; --g2:#E8EAF0; --g3:#9AA0B0; --g4:#4A5064;
+  --text:#1A1D26; --green:#2E7D32; --red:#C62828;
+  --sh:0 2px 8px rgba(31,56,100,.08);
+  --sh-lg:0 8px 24px rgba(31,56,100,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--g1);color:var(--text);overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+input,textarea,select{-webkit-user-select:text;user-select:text;font-family:inherit}
+button{font-family:inherit}
+
+/* ============ APP SHELL ============ */
+#app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0)}
+
+.topbar{
+  background:linear-gradient(180deg,var(--navy) 0%,var(--navy-d) 100%);
+  color:#fff;padding:calc(env(safe-area-inset-top,0) + 10px) 14px 10px;
+  display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;
+  box-shadow:var(--sh)
+}
+.topbar .title{flex:1;line-height:1.15}
+.topbar h1{font-size:15px;font-weight:700;margin:0;letter-spacing:.2px}
+.topbar .sub{font-size:11px;opacity:.78;font-weight:400;margin-top:1px}
+.iconbtn{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:9px;width:38px;height:38px;display:grid;place-items:center;cursor:pointer;font-size:18px}
+.iconbtn:active{background:rgba(255,255,255,.28)}
+.iconbtn.primary{background:var(--orange)}
+.iconbtn.primary:active{background:var(--orange-l)}
+
+.tabs{background:#fff;display:flex;border-bottom:1px solid var(--g2);position:sticky;top:56px;z-index:40;box-shadow:0 1px 0 var(--g2)}
+.tab{flex:1;text-align:center;padding:13px 4px;font-size:12.5px;font-weight:600;color:var(--g4);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s}
+.tab.active{color:var(--navy);border-bottom-color:var(--orange)}
+.tab .count{display:inline-block;background:var(--g2);color:var(--g4);border-radius:10px;padding:1px 7px;font-size:10.5px;margin-left:4px;font-weight:700}
+.tab.active .count{background:var(--navy);color:#fff}
+
+main{flex:1;padding:14px;padding-bottom:80px}
+
+/* ============ CARDS ============ */
+.card{background:#fff;border-radius:12px;box-shadow:var(--sh);padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:13.5px;font-weight:700;color:var(--navy);letter-spacing:.2px;text-transform:uppercase}
+.card h3 .hint{font-weight:400;color:var(--g3);font-size:11px;text-transform:none;letter-spacing:0;margin-left:6px}
+
+/* ============ FORMS ============ */
+.row{display:flex;gap:8px}
+.row > *{flex:1}
+label{display:block;font-size:11.5px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 5px}
+label:first-child{margin-top:0}
+input[type=text],input[type=number],textarea,select{
+  width:100%;border:1.5px solid var(--g2);background:#fff;border-radius:9px;
+  padding:11px 12px;font-size:15px;color:var(--text);
+  transition:border .15s,box-shadow .15s
+}
+input:focus,textarea:focus,select:focus{outline:0;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,56,100,.1)}
+textarea{resize:none;min-height:60px;line-height:1.4}
+select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%234A5064' d='M6 8L0 0h12z'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.hint-text{font-size:11px;color:var(--g3);margin-top:4px}
+
+/* field with inline mic */
+.field-mic{position:relative}
+.field-mic textarea{padding-right:44px}
+.micbtn{position:absolute;right:6px;top:6px;width:32px;height:32px;border-radius:8px;background:var(--g1);border:0;color:var(--g4);cursor:pointer;display:grid;place-items:center;font-size:16px}
+.micbtn.listening{background:var(--red);color:#fff;animation:pulse 1.1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+/* ============ DIRECTION PICKER ============ */
+.dir-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:2px}
+.dir-btn{
+  padding:8px 3px;border-radius:9px;background:var(--g1);border:1.5px solid var(--g2);
+  font-size:10.5px;font-weight:700;color:var(--g4);cursor:pointer;text-align:center;line-height:1.3
+}
+.dir-btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.dir-btn.compass{grid-column:span 4;display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;border-style:dashed}
+.dir-btn.compass.active{background:var(--orange);border-color:var(--orange);border-style:solid;color:#fff}
+.dir-btn .arrow{font-size:14px}
+
+/* ============ CAMERA ============ */
+.cam-box{
+  position:relative;background:#000;border-radius:12px;overflow:hidden;
+  aspect-ratio:1/1;width:100%;display:grid;place-items:center
+}
+.cam-box video,.cam-box img{width:100%;height:100%;object-fit:cover;display:block}
+.cam-placeholder{color:#fff;text-align:center;padding:20px;opacity:.65}
+.cam-placeholder .ico{font-size:48px;margin-bottom:8px}
+.cam-actions{display:flex;gap:8px;margin-top:10px}
+.cam-actions button{
+  flex:1;padding:14px;border-radius:10px;border:0;background:var(--navy);color:#fff;
+  font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px
+}
+.cam-actions button.secondary{background:var(--g2);color:var(--g4)}
+.cam-actions button:disabled{opacity:.45}
+.cam-actions button:active:not(:disabled){transform:scale(.98)}
+.photo-info{display:flex;justify-content:space-between;font-size:11.5px;color:var(--g3);margin-top:6px;padding:0 4px}
+
+/* ============ PHOTO ID ============ */
+.pid-wrap{display:flex;align-items:center;gap:8px}
+.pid-wrap input{flex:1;font-size:18px;font-weight:700;text-align:center;color:var(--navy)}
+.pid-wrap .step{width:40px;height:42px;border-radius:9px;background:var(--g1);border:1.5px solid var(--g2);font-size:18px;font-weight:700;color:var(--g4);cursor:pointer}
+.pid-wrap .step:active{background:var(--g2)}
+
+/* ============ SUBMIT ============ */
+.submit-bar{
+  position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(env(safe-area-inset-bottom,0) + 10px);
+  background:linear-gradient(180deg,rgba(245,246,250,0) 0%,var(--g1) 30%);
+  z-index:45;display:flex;gap:8px
+}
+.submit-bar button{
+  flex:1;padding:14px;border-radius:11px;border:0;font-size:15px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px
+}
+.btn-save{background:var(--orange);color:#fff;box-shadow:var(--sh-lg)}
+.btn-save:active{background:var(--orange-l)}
+.btn-save:disabled{background:var(--g3);box-shadow:none}
+.btn-reset{flex:0 0 48px;background:#fff;color:var(--g4);border:1.5px solid var(--g2) !important}
+
+/* ============ LIST TAB ============ */
+.entry{
+  background:#fff;border-radius:10px;padding:10px;margin-bottom:8px;display:flex;gap:10px;
+  box-shadow:var(--sh);border-left:3px solid var(--navy)
+}
+.entry.defect{border-left-color:var(--orange);background:#FFF9F0}
+.entry .thumb{width:66px;height:66px;border-radius:8px;background:var(--g2);object-fit:cover;flex-shrink:0}
+.entry .body{flex:1;min-width:0}
+.entry .pid{font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.3px}
+.entry .loc{font-size:13.5px;font-weight:600;margin-top:1px}
+.entry .desc{font-size:12px;color:var(--g4);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry .cond{display:inline-block;margin-top:3px;padding:1px 8px;border-radius:10px;background:var(--lblue);color:var(--navy);font-size:10.5px;font-weight:700}
+.entry.defect .cond{background:var(--amber);color:var(--amber-t)}
+.entry .act{display:flex;flex-direction:column;gap:4px}
+.entry .act button{width:32px;height:28px;border-radius:7px;border:0;background:var(--g1);color:var(--g4);font-size:13px;cursor:pointer}
+.entry .act button.del:active{background:var(--red);color:#fff}
+.empty{text-align:center;padding:40px 20px;color:var(--g3)}
+.empty .ico{font-size:42px;margin-bottom:8px;opacity:.5}
+.empty .msg{font-size:13px}
+
+/* ============ BUILDINGS ============ */
+.bld-card{background:#fff;border-radius:11px;padding:12px;margin-bottom:10px;box-shadow:var(--sh);cursor:pointer;border:2px solid transparent}
+.bld-card.active{border-color:var(--orange);background:#FFFAF5}
+.bld-card .name{font-size:14.5px;font-weight:700;color:var(--navy)}
+.bld-card .meta{display:flex;gap:10px;font-size:11.5px;color:var(--g4);margin-top:4px;flex-wrap:wrap}
+.bld-card .meta span{display:flex;align-items:center;gap:3px}
+.bld-add{background:var(--navy);color:#fff;border:0;border-radius:10px;padding:12px;font-size:14px;font-weight:700;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px}
+.bld-add:active{background:var(--navy-d)}
+
+/* ============ MODAL ============ */
+.modal-bg{position:fixed;inset:0;background:rgba(19,37,71,.55);z-index:100;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-bg.show{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:18px 16px calc(env(safe-area-inset-bottom,0) + 16px);animation:slideUp .25s}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h2{margin:0 0 14px;font-size:17px;color:var(--navy)}
+.modal .actions{display:flex;gap:8px;margin-top:14px}
+.modal .actions button{flex:1;padding:12px;border-radius:9px;border:0;font-size:14px;font-weight:700;cursor:pointer}
+.modal .actions .go{background:var(--navy);color:#fff}
+.modal .actions .cancel{background:var(--g2);color:var(--g4)}
+.modal .actions .danger{background:var(--red);color:#fff}
+
+/* ============ EXPORT TAB ============ */
+.export-summary{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-l) 100%);color:#fff;border-radius:12px;padding:16px;margin-bottom:12px}
+.export-summary .big{font-size:32px;font-weight:700;line-height:1}
+.export-summary .lbl{font-size:12px;opacity:.8;margin-top:2px}
+.export-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.export-stats .stat{background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px}
+.export-stats .stat .n{font-size:18px;font-weight:700}
+.export-stats .stat .l{font-size:10.5px;opacity:.8;text-transform:uppercase;letter-spacing:.4px}
+.export-btn{background:var(--orange);color:#fff;width:100%;padding:14px;border:0;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;box-shadow:var(--sh-lg)}
+.export-btn:active{background:var(--orange-l)}
+.export-btn.alt{background:var(--navy)}
+.export-btn.alt:active{background:var(--navy-d)}
+.export-btn:disabled{background:var(--g3);box-shadow:none}
+
+/* ============ TOAST ============ */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--navy-d);color:#fff;padding:10px 18px;border-radius:22px;font-size:13px;font-weight:600;z-index:200;box-shadow:var(--sh-lg);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+
+.hidden{display:none !important}
+
+/* ============ SECURITY LOGIN ============ */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,var(--navy-d) 0%,var(--navy) 60%,var(--navy-l) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-box{
+  background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:340px;
+  box-shadow:0 16px 48px rgba(0,0,0,.35);text-align:center;
+}
+.login-logo{font-size:48px;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.login-sub{font-size:12.5px;color:var(--g3);margin-bottom:28px;line-height:1.5}
+.google-btn{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--g2);
+  background:#fff;font-size:15px;font-weight:600;color:var(--text);
+  cursor:pointer;transition:all .2s;margin-bottom:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08)
+}
+.google-btn:hover{background:var(--g1);border-color:var(--g3)}
+.google-btn:active{transform:scale(.98)}
+.google-btn img{width:22px;height:22px}
+.login-msg{font-size:12.5px;min-height:20px;margin-top:8px;font-weight:600;padding:8px 12px;border-radius:8px}
+.login-msg.error{background:#FFEBEE;color:var(--red)}
+.login-msg.success{background:#E8F5E9;color:#2E7D32}
+.login-msg.info{background:var(--lblue);color:var(--navy)}
+.login-expiry{font-size:11px;color:var(--g3);margin-top:14px;line-height:1.5}
+.login-user{
+  display:flex;align-items:center;gap:10px;background:var(--g1);
+  border-radius:10px;padding:10px 12px;margin-bottom:14px;text-align:left
+}
+.login-user img{width:38px;height:38px;border-radius:50%;border:2px solid var(--g2)}
+.login-user .uname{font-size:13px;font-weight:700;color:var(--text)}
+.login-user .uemail{font-size:11px;color:var(--g4)}
+.logout-btn{
+  background:none;border:1px solid var(--g2);border-radius:8px;
+  padding:6px 14px;font-size:12px;color:var(--g4);cursor:pointer;margin-top:4px
+}
+
+.crack-width-wrap{display:flex;gap:8px;align-items:center;margin-top:4px}
+.crack-width-wrap select{flex:1}
+.degree-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;
+  white-space:nowrap;min-width:90px;text-align:center;
+  background:var(--g2);color:var(--g4);transition:all .2s;flex-shrink:0
+}
+.degree-badge.negligible {background:#E8F5E9;color:#2E7D32}
+.degree-badge.very-slight{background:#E3F2FD;color:#1565C0}
+.degree-badge.slight     {background:#FFF8E1;color:#F57F17}
+.degree-badge.moderate   {background:#FFF3E0;color:#E65100}
+.degree-badge.severe     {background:#FFEBEE;color:#C62828}
+.degree-badge.very-severe{background:#880E4F;color:#fff}
+</style>
+</head>
+<body>
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">📋</div>
+    <div class="login-title">PCS Survey</div>
+    <div class="login-sub">Encardio Rite — Dubai Metro Blue Line<br>Sign in with your Google account to continue</div>
+
+    <!-- Signed-in user info (hidden until signed in) -->
+    <div class="login-user hidden" id="loginUser">
+      <img id="userAvatar" src="" alt="">
+      <div>
+        <div class="uname" id="userName"></div>
+        <div class="uemail" id="userEmail"></div>
+      </div>
+    </div>
+
+    <!-- Google Sign-In button -->
+    <button class="google-btn" id="googleSignInBtn">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Sign in with Google
+    </button>
+
+    <!-- Access denied / status message -->
+    <div class="login-msg hidden" id="loginMsg"></div>
+
+    <!-- Sign out (shown after sign-in if denied) -->
+    <button class="logout-btn hidden" id="logoutBtn">Sign out &amp; try another account</button>
+
+    <div class="login-expiry" id="loginExpiry"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+
+  <div class="topbar">
+    <div class="title">
+      <h1 id="projectTitle">PCS Survey</h1>
+      <div class="sub" id="buildingSub">No building selected</div>
+    </div>
+    <button class="iconbtn" id="settingsBtn" title="Settings">⚙</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="capture">Capture</div>
+    <div class="tab" data-tab="list">Entries<span class="count" id="cntEntries">0</span></div>
+    <div class="tab" data-tab="buildings">Buildings<span class="count" id="cntBuildings">0</span></div>
+    <div class="tab" data-tab="export">Export</div>
+  </div>
+
+  <main>
+    <!-- ========== CAPTURE TAB ========== -->
+    <section id="tabCapture">
+
+      <div class="card">
+        <h3>Photo <span class="hint" id="photoCardHint">full quality · stamped</span></h3>
+        <div class="cam-box" id="camBox">
+          <div class="cam-placeholder" id="camPlaceholder">
+            <div class="ico">📷</div>
+            <div>Tap Capture to open camera<br>or Gallery to pick a photo</div>
+          </div>
+          <img id="camPreview" class="hidden" alt="">
+          <canvas id="camCanvas" class="hidden"></canvas>
+        </div>
+        <div class="cam-actions">
+          <button id="btnCapture">📸 Capture</button>
+          <button class="secondary" id="btnGallery">📂 Gallery</button>
+        </div>
+        <div class="photo-info" id="photoInfo"><span>No photo</span><span></span></div>
+        <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
+        <input type="file" id="galleryInput" accept="image/*" class="hidden">
+      </div>
+
+      <div class="card">
+        <h3>Direction</h3>
+        <div class="dir-wrap" id="dirWrap">
+          <button class="dir-btn" data-dir="North">North</button>
+          <button class="dir-btn" data-dir="East">East</button>
+          <button class="dir-btn" data-dir="South">South</button>
+          <button class="dir-btn" data-dir="West">West</button>
+          <button class="dir-btn" data-dir="North East">North East</button>
+          <button class="dir-btn" data-dir="South East">South East</button>
+          <button class="dir-btn" data-dir="South West">South West</button>
+          <button class="dir-btn" data-dir="North West">North West</button>
+          <button class="dir-btn" data-dir="North to South">North → South</button>
+          <button class="dir-btn" data-dir="South to North">South → North</button>
+          <button class="dir-btn" data-dir="East to West">East → West</button>
+          <button class="dir-btn" data-dir="West to East">West → East</button>
+          <button class="dir-btn" data-dir="North East to South West">NE → SW</button>
+          <button class="dir-btn" data-dir="South West to North East">SW → NE</button>
+          <button class="dir-btn" data-dir="North West to South East">NW → SE</button>
+          <button class="dir-btn" data-dir="South East to North West">SE → NW</button>
+          <button class="dir-btn compass" id="compassBtn">
+            <span class="arrow">🧭</span><span id="compassLabel">Use Compass</span>
+          </button>
+        </div>
+        <div class="hint-text" id="compassHint">Tap a direction, or use phone compass for auto-fill</div>
+
+        <label style="margin-top:14px">Side (suffix)</label>
+        <select id="sideSuffix">
+          <option value="Side">Side (default)</option>
+          <option value="">— none —</option>
+          <option value="Wing">Wing</option>
+          <option value="Elevation">Elevation</option>
+          <option value="Face">Face</option>
+          <option value="Floor">Floor</option>
+          <option value="Ceiling">Ceiling</option>
+          <option value="Step / Stair">Step / Stair</option>
+          <option value="Column">Column</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <h3>Description <span class="hint">what's in the photo</span></h3>
+        <div class="field-mic">
+          <textarea id="descInput" placeholder="e.g. Outer Wall Crack, Column Plaster Damaged, Parking Area Full View..."></textarea>
+          <button class="micbtn" id="micDesc" title="Voice">🎤</button>
+        </div>
+        <div class="hint-text">Handwrite or speak — auto-capitalised, spelling auto-corrected on export</div>
+      </div>
+
+      <div class="card">
+        <h3>Condition / Defect</h3>
+        <select id="conditionSelect">
+          <option value="N/A">N/A — no defect (full view)</option>
+          <optgroup label="— Quick pick —">
+            <option>Crack</option>
+            <option>Damage</option>
+            <option>Tiles Crack</option>
+            <option>Tiles Broken</option>
+            <option>Plaster Damage</option>
+            <option>Paint Peel Off</option>
+            <option>Paint Removed</option>
+            <option>Rust</option>
+            <option>Honeycomb</option>
+            <option>Seepage</option>
+          </optgroup>
+          <optgroup label="— All structural —">
+            <option>Wall Crack</option>
+            <option>Floor Crack</option>
+            <option>Ceiling Gap</option>
+            <option>Joint Crack</option>
+            <option>Joint Gap</option>
+            <option>Corner Damage</option>
+            <option>Crack &amp; Rust</option>
+            <option>Plaster Delamination &amp; Paint Peeling</option>
+          </optgroup>
+          <optgroup label="— All paint / surface —">
+            <option>Paint Crack</option>
+            <option>Paint Crack &amp; Rust</option>
+            <option>Paint Damage</option>
+            <option>Paint Mark</option>
+            <option>Paint Marker</option>
+            <option>Paint Peel Off &amp; Crack</option>
+            <option>Paint Peel-off</option>
+            <option>Paint Removed &amp; Crack</option>
+            <option>Colour Removed</option>
+            <option>Discolouration</option>
+            <option>Pencil Mark</option>
+            <option>Surface Abrasion</option>
+            <option>Wall Paper Removed</option>
+          </optgroup>
+          <optgroup label="— All tiles / floor —">
+            <option>Tiles Gap</option>
+            <option>Tiles Loose</option>
+            <option>Floor Damage</option>
+          </optgroup>
+          <optgroup label="— All panels / fittings —">
+            <option>Display Damage</option>
+            <option>Grip Damage</option>
+            <option>Panel Damage</option>
+            <option>Panel Scratch</option>
+            <option>Panel Uneven</option>
+            <option>Panel Uneven &amp; Scratch</option>
+            <option>Scratch</option>
+            <option>Scratch &amp; Damage</option>
+            <option>Scratch &amp; Paint Removed</option>
+            <option>Scratch &amp; Rust</option>
+            <option>Sign Damage</option>
+            <option>Subframe Loosening</option>
+            <option>Uneven</option>
+            <option>Uneven &amp; Subframe Removed</option>
+          </optgroup>
+          <optgroup label="— Other —">
+            <option>Gap</option>
+            <option>Loose</option>
+            <option>Broken</option>
+            <option>Chipped</option>
+            <option>Misalignment</option>
+            <option>Rust &amp; Discolouration</option>
+            <option>Rust &amp; Paint Removed</option>
+            <option>Honey Comb</option>
+          </optgroup>
+          <optgroup label="— Al Marwan / Composite —">
+            <option>Glass Broken</option>
+            <option>Concrete Damage</option>
+            <option>Crack and Damage</option>
+            <option>Crack / Paint Peel Off</option>
+            <option>Damage / Crack</option>
+            <option>Paint Crack / Paint Peel Off</option>
+            <option>Paint Crack / Plaster Crack</option>
+            <option>Paint Peel Off / Crack</option>
+            <option>Paint Peel Off / Paint Crack</option>
+            <option>Paint Peel Off / Plaster Damage</option>
+            <option>Plaster Crack</option>
+            <option>Plaster Crack / Damage</option>
+            <option>Plaster Damage / Crack</option>
+            <option>Plaster Damage / Tiles Damaged</option>
+            <option>Tiles Crack / Damage</option>
+            <option>Tiles Damaged</option>
+            <option>Tiles Loose / Damage</option>
+            <option>Tiles Loose / Joint Crack</option>
+            <option>Tiles Loose and Damaged</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="card" id="crackWidthCard">
+        <h3>Crack Width <span class="hint">optional — if crack is measured</span></h3>
+        <div class="crack-width-wrap">
+          <select id="crackWidthSelect">
+            <option value="">— Not measured —</option>
+            <optgroup label="— Negligible (Cat. 0) &lt;0.1mm —">
+              <option value="0.05">0.05mm (hairline)</option>
+            </optgroup>
+            <optgroup label="— Very Slight (Cat. 1) 0.1–1mm —">
+              <option value="0.1">0.1mm</option>
+              <option value="0.2">0.2mm</option>
+              <option value="0.3">0.3mm</option>
+              <option value="0.5">0.5mm</option>
+              <option value="0.8">0.8mm</option>
+              <option value="1.0">1.0mm</option>
+            </optgroup>
+            <optgroup label="— Slight (Cat. 2) 1–5mm —">
+              <option value="1.5">1.5mm</option>
+              <option value="2.0">2.0mm</option>
+              <option value="2.5">2.5mm</option>
+              <option value="3.0">3.0mm</option>
+              <option value="4.0">4.0mm</option>
+              <option value="5.0">5.0mm</option>
+            </optgroup>
+            <optgroup label="— Moderate (Cat. 3) 5–15mm —">
+              <option value="6.0">6.0mm</option>
+              <option value="8.0">8.0mm</option>
+              <option value="10.0">10.0mm</option>
+              <option value="12.0">12.0mm</option>
+              <option value="15.0">15.0mm</option>
+            </optgroup>
+            <optgroup label="— Severe (Cat. 4) 15–25mm —">
+              <option value="18.0">18.0mm</option>
+              <option value="20.0">20.0mm</option>
+              <option value="25.0">25.0mm</option>
+            </optgroup>
+            <optgroup label="— Very Severe (Cat. 5) &gt;25mm —">
+              <option value="30.0">30.0mm</option>
+              <option value="40.0">40.0mm</option>
+              <option value="50.0">&gt;50mm</option>
+            </optgroup>
+          </select>
+          <span class="degree-badge" id="degreeBadge">No Width</span>
+        </div>
+        <div class="hint-text" id="crackWidthHint">Select a width → degree auto-assigned per Burland et al. (1977)</div>
+      </div>
+
+      <div class="card">
+        <h3>Photo ID <span class="hint">auto-numbered</span></h3>
+        <div class="pid-wrap">
+          <button class="step" id="pidDn">−</button>
+          <input type="number" id="photoId" value="1" min="1">
+          <button class="step" id="pidUp">+</button>
+        </div>
+        <div class="hint-text">Continues from last saved entry. Edit if needed.</div>
+
+        <label style="margin-top:14px">Remarks <span style="font-weight:400;color:var(--g3);text-transform:none;letter-spacing:0">(optional)</span></label>
+        <div class="field-mic">
+          <textarea id="remarksInput" placeholder="e.g. Str-09, RPN-292 to 293" style="min-height:44px"></textarea>
+          <button class="micbtn" id="micRemarks">🎤</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========== LIST TAB ========== -->
+    <section id="tabList" class="hidden">
+      <div id="entryList"></div>
+      <div class="empty hidden" id="emptyList">
+        <div class="ico">📋</div>
+        <div class="msg">No entries yet for this building.<br>Capture a photo to start.</div>
+      </div>
+    </section>
+
+    <!-- ========== BUILDINGS TAB ========== -->
+    <section id="tabBuildings" class="hidden">
+      <button class="bld-add" id="btnAddBld">＋ New Building</button>
+      <div id="buildingList"></div>
+      <div class="empty hidden" id="emptyBlds">
+        <div class="ico">🏢</div>
+        <div class="msg">No buildings yet.<br>Tap <strong>＋ New Building</strong> to start.</div>
+      </div>
+    </section>
+
+    <!-- ========== EXPORT TAB ========== -->
+    <section id="tabExport" class="hidden">
+      <div class="export-summary" id="exportSummary">
+        <div class="big" id="expPhotos">0</div>
+        <div class="lbl">Total photos captured</div>
+        <div class="export-stats">
+          <div class="stat"><div class="n" id="expBlds">0</div><div class="l">Buildings</div></div>
+          <div class="stat"><div class="n" id="expDef">0</div><div class="l">Defects</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Final submission package</h3>
+        <div class="hint-text" style="margin-bottom:10px">Word report (photos + descriptions + defect ovals, ready for client) + Excel log + all photos. One ZIP.</div>
+        <button class="export-btn" id="btnExportSubmission">📝 Export Word + Excel + Photos</button>
+      </div>
+
+      <div class="card">
+        <h3>Individual exports</h3>
+        <div class="hint-text" style="margin-bottom:10px">If you only need part of the package.</div>
+        <button class="export-btn alt" id="btnExportWordOnly" style="margin-bottom:8px">📝 Word only (with photos)</button>
+        <button class="export-btn alt" id="btnExportOne" style="margin-bottom:8px">📊 Excel + Photos ZIP</button>
+        <button class="export-btn alt" id="btnExportExcelOnly">📄 Excel only</button>
+      </div>
+
+      <div class="card">
+        <h3>Export ALL buildings</h3>
+        <div class="hint-text" style="margin-bottom:10px">Every building: Word + Excel + photos, one big ZIP.</div>
+        <button class="export-btn" id="btnExportAll">📦 Export All (ZIP)</button>
+      </div>
+
+      <div class="card">
+        <h3>Data management</h3>
+        <button class="export-btn alt" id="btnBackup" style="margin-bottom:8px">💾 Backup (JSON)</button>
+        <button class="export-btn alt" id="btnRestore" style="margin-bottom:8px;background:var(--g4)">📥 Restore from backup</button>
+        <button class="export-btn alt" id="btnClearAll" style="background:var(--red)">🗑 Clear all data</button>
+        <input type="file" id="restoreInput" accept=".json" class="hidden">
+      </div>
+    </section>
+  </main>
+
+  <!-- Fixed submit bar (capture tab only) -->
+  <div class="submit-bar" id="submitBar">
+    <button class="btn-save" id="btnSave">💾 Save entry</button>
+    <button class="btn-reset" id="btnReset" title="Clear form">↺</button>
+  </div>
+
+</div>
+
+<!-- ======= MODALS ======= -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   PCS SURVEY APP — Field tool for Pre-Condition Surveys
+   Single-file PWA · offline-first · IndexedDB storage
+   ============================================================ */
+
+/* ============================================================
+   SECURITY — Google Sign-In (OAuth 2.0)
+   ── HOW TO SET UP ──────────────────────────────────────────
+   1. Go to https://console.cloud.google.com/
+   2. Create project → APIs & Services → Credentials
+   3. Create OAuth 2.0 Client ID (Web application)
+   4. Add your domain to "Authorised JavaScript origins"
+      (for local testing add: http://localhost)
+   5. Copy Client ID and paste below as GOOGLE_CLIENT_ID
+   ── HOW TO MANAGE ACCESS ───────────────────────────────────
+   Add/remove Gmail addresses from ALLOWED_EMAILS list below.
+   Only these emails can log in. You are in full control.
+   ============================================================ */
+
+const GOOGLE_CLIENT_ID = '1010783097390-h1svetrdnsh58p5vl1fee7hfvta83scv.apps.googleusercontent.com';
+const EXPIRY_DATE      = '2026-12-31';   // ← app locks after this date
+const SESSION_KEY      = 'pcs.gauth';
+const SESSION_HOURS    = 12;             // stay logged in for 12 hours
+
+// ── ADD / REMOVE SURVEYOR EMAILS HERE ──────────────────────
+const ALLOWED_EMAILS = [
+  'gadauh824@gmail.com',        // ← Admin
+  'ergsshobha@gmail.com',       // ← Surveyor
+  // add more as needed...
+];
+// ───────────────────────────────────────────────────────────
+
+(function initGoogleAuth(){
+  const expEl   = document.getElementById('loginExpiry');
+  const msgEl   = document.getElementById('loginMsg');
+  const signBtn = document.getElementById('googleSignInBtn');
+  const logoutB = document.getElementById('logoutBtn');
+  const userBox = document.getElementById('loginUser');
+
+  // Check expiry
+  const today = new Date().toISOString().slice(0,10);
+  if(today > EXPIRY_DATE){
+    showMsg('Access expired. Please contact your supervisor.','error');
+    signBtn.disabled = true;
+    expEl.textContent = `Access expired: ${EXPIRY_DATE}`;
+    return;
+  }
+  expEl.textContent = `Access valid until: ${EXPIRY_DATE}`;
+
+  // Check existing session
+  try{
+    const sess = JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+    if(sess && sess.email && Date.now()-sess.ts < SESSION_HOURS*3600000){
+      if(ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(sess.email.toLowerCase())){
+        unlockApp(sess.name); return;
+      }
+    }
+  }catch(e){}
+
+  // Show sign-in button
+  signBtn.addEventListener('click', handleGoogleSignIn);
+  logoutB.addEventListener('click', handleLogout);
+
+  function handleGoogleSignIn(){
+    signBtn.textContent = '⏳ Signing in...';
+    signBtn.disabled = true;
+    showMsg('Opening Google Sign-In...','info');
+
+    // Initialize Google Identity Services
+    if(typeof google === 'undefined'){
+      showMsg('Google Sign-In unavailable. Check internet connection.','error');
+      signBtn.disabled = false;
+      signBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px">Sign in with Google';
+      return;
+    }
+
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+    google.accounts.id.prompt((notification)=>{
+      if(notification.isNotDisplayed() || notification.isSkippedMoment()){
+        // Fallback: render button
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInBtn'),
+          {theme:'outline', size:'large', width:280, text:'signin_with'}
+        );
+        signBtn.disabled = false;
+      }
+    });
+  }
+
+  function handleCredential(response){
+    try{
+      // Decode JWT payload (base64)
+      const payload = JSON.parse(atob(response.credential.split('.')[1]
+        .replace(/-/g,'+').replace(/_/g,'/')));
+      const email = payload.email || '';
+      const name  = payload.name  || email;
+      const pic   = payload.picture || '';
+
+      // Show user info
+      document.getElementById('userName').textContent   = name;
+      document.getElementById('userEmail').textContent  = email;
+      document.getElementById('userAvatar').src         = pic;
+      userBox.classList.remove('hidden');
+      signBtn.classList.add('hidden');
+
+      if(ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(email.toLowerCase())){
+        // ✅ Approved
+        showMsg(`✅ Access granted. Welcome, ${name.split(' ')[0]}!`,'success');
+        localStorage.setItem(SESSION_KEY, JSON.stringify({email,name,ts:Date.now()}));
+        setTimeout(()=>unlockApp(name), 1200);
+      } else {
+        // ❌ Not in whitelist
+        showMsg(`❌ Access denied for ${email}. Contact your supervisor.`,'error');
+        logoutB.classList.remove('hidden');
+        google.accounts.id.revoke(email, ()=>{});
+      }
+    }catch(err){
+      showMsg('Sign-in failed. Please try again.','error');
+      signBtn.disabled = false;
+      signBtn.classList.remove('hidden');
+    }
+  }
+
+  function handleLogout(){
+    localStorage.removeItem(SESSION_KEY);
+    userBox.classList.add('hidden');
+    logoutB.classList.add('hidden');
+    msgEl.classList.add('hidden');
+    signBtn.classList.remove('hidden');
+    signBtn.disabled = false;
+    signBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px;height:22px"> Sign in with Google';
+  }
+
+  function showMsg(text, type){
+    msgEl.textContent = text;
+    msgEl.className   = `login-msg ${type}`;
+    msgEl.classList.remove('hidden');
+  }
+})();
+
+function unlockApp(name){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  // Show user name in topbar
+  if(name){
+    const sub = document.getElementById('buildingSub');
+    if(sub && sub.textContent === 'No building selected')
+      sub.textContent = `👤 ${name} · No building selected`;
+  }
+}
+
+
+/* ---------- STATE ---------- */
+const S = {
+  project: localStorage.getItem('pcs.project') || 'Darwish Project',
+  currentBuildingId: null,
+  buildings: [],
+  entries: [],           // entries for current building
+  allEntriesCount: 0,
+  photoBlob: null,       // current in-memory photo
+  photoMeta: null,       // {w,h,size}
+  stream: null,
+  direction: '',
+  recognition: null,
+  currentMicField: null,
+  stampDisabled: localStorage.getItem('pcs.stampDisabled')==='1',
+};
+
+/* ---------- SPELLING / TITLE-CASE RULES (mirrors VBA+context) ---------- */
+const SPELL_MAP = {
+  "tails":"Tiles","easst":"East","piller":"Pillar","coller":"Column",
+  "gipsum":"Gypsum","pasage":"Passage","acess":"Access","damge":"Damage",
+  "cracl":"Crack","fashed":"Facade","fashad":"Facade","exilater":"Escalator",
+  "exlater":"Escalator","extingaisher":"Extinguisher","incide":"Inside",
+  "borken":"Broken","ruber":"Rubber","wakk":"Wall","recepit":"Receipt",
+  "uneven":"Uneven","cover":"Cover","coverd":"Covered","plater":"Plaster",
+  "plastes":"Plaster","plastr":"Plaster","columm":"Column","colum":"Column",
+  "corek":"Crack","covek":"Crack","cocek":"Crack","coack":"Crack",
+  "parting":"Parking","parkin":"Parking","sto":"Structure","str":"Structure"
+};
+const LOWER_WORDS = new Set(['and','to','the','of','in','at','for','near','from','on','by','with']);
+const COMPASS_FIX = [
+  [/\bnorth\s*west\b/gi,'North West'],[/\bnorth\s*east\b/gi,'North East'],
+  [/\bsouth\s*west\b/gi,'South West'],[/\bsouth\s*east\b/gi,'South East'],
+  [/\bnorthwest\b/gi,'North West'],[/\bnortheast\b/gi,'North East'],
+  [/\bsouthwest\b/gi,'South West'],[/\bsoutheast\b/gi,'South East'],
+  [/\bN\.?W\.?\b/g,'North West'],[/\bN\.?E\.?\b/g,'North East'],
+  [/\bS\.?W\.?\b/g,'South West'],[/\bS\.?E\.?\b/g,'South East']
+];
+
+function smartTitleCase(raw){
+  if(!raw) return '';
+  let t = String(raw).trim().replace(/\s+/g,' ');
+  // apply compass fix first (case-insensitive)
+  COMPASS_FIX.forEach(([re,v])=>t=t.replace(re,v));
+  // token-by-token
+  const parts = t.split(' ');
+  const out = parts.map((w,i)=>{
+    const clean = w.toLowerCase().replace(/[^a-z]/g,'');
+    if(SPELL_MAP[clean]) return SPELL_MAP[clean];
+    if(/^(ac|ahu|rpn|id|uae)$/i.test(w)) return w.toUpperCase();
+    if(i>0 && LOWER_WORDS.has(clean)) return clean;
+    // keep numbers / mixed
+    if(/^\d/.test(w)) return w;
+    return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();
+  });
+  return out.join(' ');
+}
+
+/* ---------- DEFECT CONDITIONS (from VBA) ---------- */
+const DEFECT_CONDITIONS = new Set([
+  'Colour Removed','Corner Damage','Crack','Crack & Rust','Damage','Discolouration',
+  'Gap','Honey Comb','Honeycomb','Loose','Misalignment',
+  'Paint Crack','Paint Crack & Rust','Paint Mark','Paint Marker','Paint Peel Off',
+  'Paint Peel Off & Crack','Paint Peel-off','Paint Removed','Paint Removed & Crack',
+  'Pencil Mark','Plaster Damage','Plaster Delamination & Paint Peeling',
+  'Rust','Rust & Discolouration','Rust & Paint Removed',
+  'Scratch','Scratch & Damage','Scratch & Paint Removed','Scratch & Rust',
+  'Subframe Loosening','Surface Abrasion','Uneven','Uneven & Subframe Removed',
+  'Wall Paper Removed','Ceiling Gap','Floor Crack','Joint Crack','Joint Gap',
+  'Paint Damage','Tiles Broken','Tiles Crack','Tiles Gap','Tiles Loose',
+  'Wall Crack','Display Damage','Floor Damage','Grip Damage','Panel Damage',
+  'Panel Scratch','Panel Uneven','Panel Uneven & Scratch','Sign Damage','Broken',
+  'Chipped','Seepage','Paint Damage',
+  // ── Al Marwan Survey conditions ──
+  'Glass Broken','Concrete Damage','Crack and Damage','Crack / Paint Peel Off',
+  'Damage / Crack','Paint Crack / Paint Peel Off','Paint Crack / Plaster Crack',
+  'Paint Peel Off / Crack','Paint Peel Off / Paint Crack','Paint Peel Off / Plaster Damage',
+  'Plaster Crack','Plaster Crack / Damage','Plaster Damage / Crack',
+  'Plaster Damage / Tiles Damaged','Tiles Crack / Damage','Tiles Damaged',
+  'Tiles Loose / Damage','Tiles Loose / Joint Crack','Tiles Loose and Damaged'
+]);
+function isDefect(c){ return c && c!=='N/A' && c.trim()!=='' ; }
+
+/* ============================================================
+   INDEXEDDB STORAGE
+   ============================================================ */
+const DB_NAME='pcs_survey_db', DB_VER=1;
+let db=null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded = e=>{
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('buildings')) d.createObjectStore('buildings',{keyPath:'id'});
+      if(!d.objectStoreNames.contains('entries'))   {
+        const s = d.createObjectStore('entries',{keyPath:'id'});
+        s.createIndex('byBuilding','buildingId',{unique:false});
+      }
+      if(!d.objectStoreNames.contains('photos'))    d.createObjectStore('photos',{keyPath:'entryId'});
+    };
+    req.onsuccess = e=>{db=e.target.result;res(db)};
+    req.onerror = e=>rej(e);
+  });
+}
+function tx(store, mode='readonly'){ return db.transaction(store,mode).objectStore(store); }
+function idbGetAll(store){ return new Promise((r,j)=>{const req=tx(store).getAll();req.onsuccess=()=>r(req.result);req.onerror=()=>j(req.error);});}
+function idbPut(store,val){ return new Promise((r,j)=>{const req=tx(store,'readwrite').put(val);req.onsuccess=()=>r(val);req.onerror=()=>j(req.error);});}
+function idbGet(store,key){ return new Promise((r,j)=>{const req=tx(store).get(key);req.onsuccess=()=>r(req.result);req.onerror=()=>j(req.error);});}
+function idbDel(store,key){ return new Promise((r,j)=>{const req=tx(store,'readwrite').delete(key);req.onsuccess=()=>r();req.onerror=()=>j(req.error);});}
+function idbGetByIdx(store,idxName,val){
+  return new Promise((r,j)=>{
+    const req = tx(store).index(idxName).getAll(val);
+    req.onsuccess=()=>r(req.result); req.onerror=()=>j(req.error);
+  });
+}
+function idbClear(store){return new Promise((r,j)=>{const req=tx(store,'readwrite').clear();req.onsuccess=()=>r();req.onerror=()=>j(req.error);});}
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function toast(msg, kind=''){
+  const t = $('#toast'); t.textContent=msg; t.className='toast show '+kind;
+  setTimeout(()=>t.className='toast '+kind,2200);
+}
+
+function openModal(html){
+  $('#modalBox').innerHTML = html;
+  $('#modalBg').classList.add('show');
+}
+function closeModal(){ $('#modalBg').classList.remove('show'); }
+$('#modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+function switchTab(name){
+  $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  ['capture','list','buildings','export'].forEach(n=>{
+    $('#tab'+n.charAt(0).toUpperCase()+n.slice(1)).classList.toggle('hidden',n!==name);
+  });
+  $('#submitBar').style.display = (name==='capture') ? 'flex' : 'none';
+  if(name==='list') renderEntries();
+  if(name==='buildings') renderBuildings();
+  if(name==='export') renderExportSummary();
+  window.scrollTo(0,0);
+}
+$$('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+/* ============================================================
+   BUILDINGS
+   ============================================================ */
+async function loadBuildings(){
+  S.buildings = await idbGetAll('buildings');
+  S.buildings.sort((a,b)=>a.createdAt-b.createdAt);
+  if(!S.currentBuildingId && S.buildings.length) S.currentBuildingId = S.buildings[0].id;
+  updateTopbar();
+  $('#cntBuildings').textContent = S.buildings.length;
+}
+
+function updateTopbar(){
+  $('#projectTitle').textContent = S.project;
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  $('#buildingSub').textContent = b ? `${b.name} · ${b.structureType||'—'}` : 'No building selected';
+  updatePhotoHint();
+}
+function updatePhotoHint(){
+  const el = $('#photoCardHint');
+  if(el) el.textContent = '1:1 square · full quality' + (S.stampDisabled?' · no stamp':' · stamped');
+}
+
+async function createBuilding(data){
+  const b = {
+    id:'bld_'+Date.now(),
+    name:data.name, code:data.code||'', structureType:data.structureType||'',
+    location:data.location||'', owner:data.owner||'', contact:data.contact||'',
+    nextPhotoId: parseInt(data.startId||1,10),
+    createdAt:Date.now()
+  };
+  await idbPut('buildings',b);
+  S.currentBuildingId = b.id;
+  await loadBuildings();
+  await loadEntries();
+  toast('Building created','success');
+}
+
+function promptNewBuilding(existing){
+  const e = existing || {};
+  openModal(`
+    <h2>${existing?'Edit':'New'} building</h2>
+    <label>Building name *</label>
+    <input type="text" id="mb_name" value="${e.name||''}" placeholder="e.g. Saleh Mubarak Bana Shuwan">
+    <label>Building code</label>
+    <input type="text" id="mb_code" value="${e.code||''}" placeholder="e.g. Str-09 / Building-25">
+    <label>Structure type</label>
+    <input type="text" id="mb_struct" value="${e.structureType||''}" placeholder="e.g. G+10th+R">
+    <label>Location / area</label>
+    <input type="text" id="mb_loc" value="${e.location||''}" placeholder="e.g. Qasmiah">
+    <div class="row">
+      <div><label>Owner</label><input type="text" id="mb_owner" value="${e.owner||''}"></div>
+      <div><label>Contact</label><input type="text" id="mb_contact" value="${e.contact||''}"></div>
+    </div>
+    <label>Starting Photo ID</label>
+    <input type="number" id="mb_start" value="${e.nextPhotoId||1}" min="1">
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Cancel</button>
+      <button class="go" id="mb_save">${existing?'Save':'Create'}</button>
+    </div>
+  `);
+  $('#mb_save').onclick = async ()=>{
+    const name = $('#mb_name').value.trim();
+    if(!name){ toast('Name is required','error'); return; }
+    const data = {
+      name, code:$('#mb_code').value.trim(),
+      structureType:$('#mb_struct').value.trim(),
+      location:$('#mb_loc').value.trim(),
+      owner:$('#mb_owner').value.trim(),
+      contact:$('#mb_contact').value.trim(),
+      startId: $('#mb_start').value
+    };
+    if(existing){
+      Object.assign(existing,data,{nextPhotoId:parseInt(data.startId,10)||existing.nextPhotoId});
+      await idbPut('buildings',existing);
+      await loadBuildings();
+    } else {
+      await createBuilding(data);
+    }
+    closeModal();
+    switchTab('capture');
+    await refreshFromBuilding();
+  };
+}
+
+async function selectBuilding(id){
+  S.currentBuildingId = id;
+  updateTopbar();
+  await loadEntries();
+  await refreshFromBuilding();
+  renderBuildings();
+  toast('Switched building');
+}
+
+async function deleteBuilding(id){
+  const b = S.buildings.find(x=>x.id===id);
+  if(!b) return;
+  openModal(`
+    <h2>Delete building?</h2>
+    <p style="color:var(--g4);font-size:13.5px;line-height:1.5">
+      <strong>${b.name}</strong> and all its entries and photos will be permanently deleted.
+      This cannot be undone.
+    </p>
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Cancel</button>
+      <button class="danger" id="confirmDel">Delete</button>
+    </div>
+  `);
+  $('#confirmDel').onclick = async ()=>{
+    const ents = await idbGetByIdx('entries','byBuilding',id);
+    for(const e of ents){ await idbDel('entries',e.id); await idbDel('photos',e.id); }
+    await idbDel('buildings',id);
+    if(S.currentBuildingId===id) S.currentBuildingId=null;
+    await loadBuildings();
+    if(!S.currentBuildingId && S.buildings[0]) S.currentBuildingId=S.buildings[0].id;
+    await loadEntries();
+    await refreshFromBuilding();
+    renderBuildings();
+    closeModal();
+    toast('Building deleted','success');
+  };
+}
+
+function renderBuildings(){
+  const list = $('#buildingList');
+  if(!S.buildings.length){
+    list.innerHTML=''; $('#emptyBlds').classList.remove('hidden'); return;
+  }
+  $('#emptyBlds').classList.add('hidden');
+  list.innerHTML = S.buildings.map(b=>`
+    <div class="bld-card ${b.id===S.currentBuildingId?'active':''}" data-id="${b.id}">
+      <div class="name">${escapeHtml(b.name)}</div>
+      <div class="meta">
+        ${b.code?`<span>🏷 ${escapeHtml(b.code)}</span>`:''}
+        ${b.structureType?`<span>🏗 ${escapeHtml(b.structureType)}</span>`:''}
+        ${b.location?`<span>📍 ${escapeHtml(b.location)}</span>`:''}
+        <span>➡ next ID ${b.nextPhotoId}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="iconbtn" style="background:var(--navy);flex:1;height:34px;font-size:12px;font-weight:600" data-act="select">Select</button>
+        <button class="iconbtn" style="background:var(--g2);color:var(--g4);height:34px;font-size:14px" data-act="edit">✎</button>
+        <button class="iconbtn" style="background:#FFE8E8;color:var(--red);height:34px;font-size:14px" data-act="del">🗑</button>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.bld-card').forEach(card=>{
+    const id = card.dataset.id;
+    card.querySelector('[data-act="select"]').onclick = ()=>selectBuilding(id);
+    card.querySelector('[data-act="edit"]').onclick = ()=>promptNewBuilding(S.buildings.find(b=>b.id===id));
+    card.querySelector('[data-act="del"]').onclick = ()=>deleteBuilding(id);
+  });
+}
+
+$('#btnAddBld').onclick = ()=>promptNewBuilding();
+
+/* ============================================================
+   ENTRIES
+   ============================================================ */
+async function loadEntries(){
+  if(!S.currentBuildingId){ S.entries=[]; $('#cntEntries').textContent=0; return; }
+  S.entries = await idbGetByIdx('entries','byBuilding',S.currentBuildingId);
+  S.entries.sort((a,b)=>a.photoId-b.photoId);
+  $('#cntEntries').textContent = S.entries.length;
+}
+
+async function refreshFromBuilding(){
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  if(b) $('#photoId').value = b.nextPhotoId;
+}
+
+function composeLocation(direction, suffix){
+  if(!direction) return '';
+  return (direction+' '+(suffix||'')).trim().replace(/\s+/g,' ');
+}
+
+async function saveEntry(){
+  if(!S.currentBuildingId){ toast('Create a building first','error'); switchTab('buildings'); return; }
+  if(!S.photoBlob){ toast('Capture a photo first','error'); return; }
+  if(!S.direction){ toast('Pick a direction','error'); return; }
+  const desc = smartTitleCase($('#descInput').value);
+  if(!desc){ toast('Add a description','error'); return; }
+
+  const photoId = parseInt($('#photoId').value,10)||1;
+  const suffix = $('#sideSuffix').value;
+  const condition = buildFinalCondition();
+  const remarks = smartTitleCase($('#remarksInput').value);
+
+  const entry = {
+    id:'ent_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    buildingId: S.currentBuildingId,
+    photoId, location: composeLocation(S.direction,suffix),
+    direction: S.direction, suffix,
+    description: desc, condition, remarks,
+    createdAt: Date.now(),
+    photoW: S.photoMeta?.w, photoH: S.photoMeta?.h,
+    photoSize: S.photoMeta?.size
+  };
+  await idbPut('entries',entry);
+  await idbPut('photos',{entryId:entry.id, blob:S.photoBlob});
+
+  // advance photo ID counter on building
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  if(b){ b.nextPhotoId = Math.max(b.nextPhotoId, photoId+1); await idbPut('buildings',b); }
+
+  await loadEntries();
+  await refreshFromBuilding();
+  resetFormKeepSome();
+  toast(`Saved #${photoId} · ${condition==='N/A'?'View':'DEFECT'}`,'success');
+}
+
+function resetFormKeepSome(){
+  S.photoBlob = null; S.photoMeta = null;
+  stopCamera();
+  $('#camPreview').classList.add('hidden');
+  $('#camPlaceholder').classList.remove('hidden');
+  $('#photoInfo').innerHTML='<span>No photo</span><span></span>';
+  $('#descInput').value='';
+  $('#remarksInput').value='';
+  $('#conditionSelect').value='N/A';
+  $('#crackWidthSelect').value='';
+  updateDegreeBadge();
+  $('#btnCapture').textContent='📸 Capture';
+}
+
+function resetFormAll(){
+  resetFormKeepSome();
+  S.direction='';
+  $$('.dir-btn').forEach(b=>b.classList.remove('active'));
+  $('#sideSuffix').value='Side';
+  $('#compassLabel').textContent='Use Compass';
+  $('#compassBtn').classList.remove('active');
+}
+
+/* ---------- entry list rendering ---------- */
+async function renderEntries(){
+  await loadEntries();
+  const list = $('#entryList');
+  if(!S.entries.length){
+    list.innerHTML=''; $('#emptyList').classList.remove('hidden'); return;
+  }
+  $('#emptyList').classList.add('hidden');
+  // render with lazy thumbs
+  list.innerHTML = S.entries.map(e=>`
+    <div class="entry ${isDefect(e.condition)?'defect':''}" data-id="${e.id}">
+      <img class="thumb" data-lazy="${e.id}" alt="">
+      <div class="body">
+        <div class="pid">PHOTO #${e.photoId}</div>
+        <div class="loc">${escapeHtml(e.location)}</div>
+        <div class="desc">${escapeHtml(e.description)}</div>
+        <span class="cond">${escapeHtml(e.condition)}</span>
+      </div>
+      <div class="act">
+        <button class="del" data-act="del">🗑</button>
+      </div>
+    </div>
+  `).join('');
+
+  // lazy load thumbs
+  list.querySelectorAll('img[data-lazy]').forEach(async img=>{
+    const p = await idbGet('photos',img.dataset.lazy);
+    if(p && p.blob){ img.src = URL.createObjectURL(p.blob); }
+  });
+  list.querySelectorAll('.entry').forEach(el=>{
+    el.querySelector('[data-act="del"]').onclick = async ()=>{
+      const id = el.dataset.id;
+      await idbDel('entries',id); await idbDel('photos',id);
+      await loadEntries(); renderEntries();
+      toast('Entry deleted');
+    };
+  });
+}
+
+/* ============================================================
+   CAMERA — Native device camera app (full zoom, flash etc.)
+   Uses file input with capture="environment" to open the
+   phone's default camera app instead of browser camera.
+   ============================================================ */
+function stopCamera(){
+  // No stream to stop — using native camera
+  S.stream = null;
+}
+
+$('#btnCapture').onclick = ()=>{
+  // Reset file input so same photo can be retaken
+  const fi = $('#fileInput');
+  fi.value = '';
+  fi.click();
+};
+$('#fileInput').onchange = e=>{
+  if(e.target.files[0]) processGalleryFile(e.target.files[0]);
+};
+$('#btnGallery').onclick = ()=>{
+  const gi = $('#galleryInput');
+  gi.value = '';
+  gi.click();
+};
+$('#galleryInput').onchange = e=>{ if(e.target.files[0]) processGalleryFile(e.target.files[0]); };
+
+/* ============================================================
+   DATE/TIME STAMP (mirrors stamp_photos.py)
+   Colour : rgb(236,101,17) orange with black shadow
+   Format : DD.MM.YYYY  HH:MM
+   Pos    : bottom-right
+   Size   : 3.13% of image height
+   Bold   : drawn with thickness offsets for bold effect
+   ============================================================ */
+function formatStampDate(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return `${dd}.${mm}.${yy}  ${hh}:${mi}`;
+}
+
+function stampDateTime(ctx, W, H, date){
+  if(S.stampDisabled) return;
+  const text = formatStampDate(date);
+  // text height = 3.13% of image height
+  const textPx = Math.max(14, Math.round(H * 0.0313));
+  // Use a common web-safe bold font
+  ctx.font = `bold ${textPx}px "Arial Black", Arial, sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  const metrics = ctx.measureText(text);
+  const textW = Math.ceil(metrics.width);
+  const rightMargin = Math.round(W * 0.0485);
+  const bottomMargin = Math.round(H * 0.0913);
+  const x = W - rightMargin - textW;
+  const y = H - bottomMargin;
+  // Shadow (black), drawn behind with small offset
+  const shadowOffset = Math.max(1, Math.round(textPx * 0.06));
+  const boldThickness = 2;
+  ctx.fillStyle = 'rgb(0,0,0)';
+  for(let dx=-boldThickness; dx<=boldThickness; dx++){
+    for(let dy=-boldThickness; dy<=boldThickness; dy++){
+      ctx.fillText(text, x+dx+shadowOffset, y+dy+shadowOffset);
+    }
+  }
+  // Main orange text drawn multiple times for bold weight
+  ctx.fillStyle = 'rgb(236,101,17)';
+  for(let dx=-boldThickness; dx<=boldThickness; dx++){
+    for(let dy=-boldThickness; dy<=boldThickness; dy++){
+      ctx.fillText(text, x+dx, y+dy);
+    }
+  }
+  ctx.fillText(text, x, y);
+}
+
+function setPhoto(blob, w, h){
+  S.photoBlob = blob;
+  S.photoMeta = {w,h,size:blob.size};
+  const img = $('#camPreview');
+  img.src = URL.createObjectURL(blob);
+  img.classList.remove('hidden');
+  $('#camPlaceholder').classList.add('hidden');
+  $('#photoInfo').innerHTML =
+    `<span>${w}×${h} px</span><span>${(blob.size/1024/1024).toFixed(2)} MB${S.stampDisabled?'':' · stamped'}</span>`;
+  $('#btnCapture').textContent = '🔄 Retake';
+}
+
+async function processGalleryFile(file){
+  // crop to 1:1 center square, keep resolution, apply stamp
+  const img = new Image();
+  img.onload = ()=>{
+    const size = Math.min(img.naturalWidth, img.naturalHeight);
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d');
+    const sx = (img.naturalWidth - size)/2;
+    const sy = (img.naturalHeight - size)/2;
+    ctx.drawImage(img, sx,sy,size,size, 0,0,size,size);
+    // Try to get file's actual modified date, else use now
+    const stampDate = file.lastModified ? new Date(file.lastModified) : new Date();
+    stampDateTime(ctx, size, size, stampDate);
+    c.toBlob(blob=>setPhoto(blob,size,size),'image/jpeg',0.95);
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+/* ============================================================
+   DIRECTION / COMPASS
+   ============================================================ */
+$$('.dir-btn[data-dir]').forEach(b=>{
+  b.onclick = ()=>{
+    $$('.dir-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    S.direction = b.dataset.dir;
+  };
+});
+
+function headingToDir(h){
+  // h = degrees from north clockwise
+  const dirs = ['North','North East','East','South East','South','South West','West','North West'];
+  const idx = Math.round(((h%360)/45))%8;
+  return dirs[idx];
+}
+
+$('#compassBtn').onclick = async ()=>{
+  const btn = $('#compassBtn'); const lbl = $('#compassLabel');
+  if(btn.classList.contains('active')){
+    // already running → stop
+    window.removeEventListener('deviceorientationabsolute',compassHandler);
+    window.removeEventListener('deviceorientation',compassHandler);
+    btn.classList.remove('active'); lbl.textContent='Use Compass';
+    return;
+  }
+  // iOS permission
+  if(typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission){
+    try{
+      const res = await DeviceOrientationEvent.requestPermission();
+      if(res!=='granted'){ toast('Compass permission denied','error'); return; }
+    }catch(_){}
+  }
+  btn.classList.add('active');
+  window.addEventListener('deviceorientationabsolute',compassHandler,true);
+  window.addEventListener('deviceorientation',compassHandler,true);
+  toast('Compass on — point device & tap direction');
+};
+function compassHandler(e){
+  let heading = null;
+  if(e.webkitCompassHeading !== undefined){ heading = e.webkitCompassHeading; }
+  else if(e.alpha !== null){ heading = 360 - e.alpha; }
+  if(heading==null) return;
+  const dir = headingToDir(heading);
+  $('#compassLabel').textContent = `🧭 ${dir} (${Math.round(heading)}°)`;
+  // pre-select but allow override
+  $$('.dir-btn[data-dir]').forEach(b=>b.classList.toggle('active', b.dataset.dir===dir));
+  S.direction = dir;
+}
+
+/* ============================================================
+   PHOTO ID STEPPERS
+   ============================================================ */
+$('#pidUp').onclick = ()=>{ const i=$('#photoId'); i.value = (parseInt(i.value,10)||0)+1; };
+$('#pidDn').onclick = ()=>{ const i=$('#photoId'); i.value = Math.max(1,(parseInt(i.value,10)||2)-1); };
+
+/* ============================================================
+   VOICE INPUT
+   ============================================================ */
+function setupMic(btnSel, fieldSel){
+  const btn = $(btnSel), field = $(fieldSel);
+  btn.onclick = ()=>{
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ toast('Voice not supported on this browser','error'); return; }
+    if(S.recognition && S.currentMicField===fieldSel){
+      S.recognition.stop(); return;
+    }
+    if(S.recognition){ S.recognition.stop(); }
+    const r = new SR();
+    r.lang='en-GB'; r.interimResults=true; r.continuous=false;
+    let finalText='';
+    r.onstart = ()=>{ btn.classList.add('listening'); S.recognition=r; S.currentMicField=fieldSel; };
+    r.onresult = e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t = e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalText += t;
+        else interim += t;
+      }
+      field.value = (field.value.replace(/\s*\[\.\.\.\][^[]*$/,'') +
+        finalText + (interim?` [...]${interim}`:'')).replace(/\s+/g,' ').trim();
+    };
+    r.onerror = ()=>{ btn.classList.remove('listening'); S.recognition=null; };
+    r.onend = ()=>{
+      btn.classList.remove('listening');
+      field.value = field.value.replace(/\s*\[\.\.\.\][^[]*$/,'').trim();
+      S.recognition=null; S.currentMicField=null;
+    };
+    r.start();
+  };
+}
+setupMic('#micDesc','#descInput');
+setupMic('#micRemarks','#remarksInput');
+
+/* ============================================================
+   CRACK WIDTH — Burland et al. 1977
+   ============================================================ */
+const CRACK_DEGREES = [
+  { max: 0.1,  label: 'Negligible',  cat: 0, cls: 'negligible'  },
+  { max: 1.0,  label: 'Very Slight', cat: 1, cls: 'very-slight'  },
+  { max: 5.0,  label: 'Slight',      cat: 2, cls: 'slight'       },
+  { max: 15.0, label: 'Moderate',    cat: 3, cls: 'moderate'     },
+  { max: 25.0, label: 'Severe',      cat: 4, cls: 'severe'       },
+  { max: Infinity, label: 'Very Severe', cat: 5, cls: 'very-severe' },
+];
+
+function getCrackDegree(mm){
+  return CRACK_DEGREES.find(d => mm <= d.max) || CRACK_DEGREES[5];
+}
+
+function updateDegreeBadge(){
+  const val = parseFloat($('#crackWidthSelect').value);
+  const badge = $('#degreeBadge');
+  const hint  = $('#crackWidthHint');
+  if(!val){
+    badge.textContent = 'No Width';
+    badge.className   = 'degree-badge';
+    hint.textContent  = 'Select a width → degree auto-assigned per Burland et al. (1977)';
+    return;
+  }
+  const d = getCrackDegree(val);
+  badge.textContent = `Cat.${d.cat} — ${d.label}`;
+  badge.className   = `degree-badge ${d.cls}`;
+  hint.textContent  = `Burland et al. (1977) · ${val}mm = Category ${d.cat} (${d.label})`;
+}
+
+$('#crackWidthSelect').addEventListener('change', updateDegreeBadge);
+
+function buildFinalCondition(){
+  const base = $('#conditionSelect').value;
+  const wVal = parseFloat($('#crackWidthSelect').value);
+  if(!wVal || base === 'N/A') return base;
+  const d = getCrackDegree(wVal);
+  // Format: "Crack (Width: 1.5mm) - Slight"
+  return `${base} (Width: ${wVal}mm) - ${d.label}`;
+}
+
+/* ============================================================
+   SAVE / RESET
+   ============================================================ */
+$('#btnSave').onclick = saveEntry;
+$('#btnReset').onclick = ()=>{
+  if(confirm('Clear current form?')) resetFormAll();
+};
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+function pad3(n){ return String(n).padStart(3,'0'); }
+
+async function buildExcelForBuilding(buildingId){
+  const b = S.buildings.find(x=>x.id===buildingId);
+  const ents = await idbGetByIdx('entries','byBuilding',buildingId);
+  ents.sort((a,b)=>a.photoId-b.photoId);
+  const wb = new ExcelJS.Workbook();
+  wb.creator='PCS Survey App'; wb.created=new Date();
+  const ws = wb.addWorksheet('Sheet1',{views:[{state:'frozen',ySplit:1}]});
+  ws.columns = [
+    {header:'Location',   key:'location',    width:22},
+    {header:'Description',key:'description', width:45},
+    {header:'Condition',  key:'condition',   width:22},
+    {header:'Photo ID',   key:'photoId',     width:12},
+    {header:'Remarks',    key:'remarks',     width:22}
+  ];
+  // header styling (navy/white)
+  const hdr = ws.getRow(1);
+  hdr.height = 24;
+  hdr.eachCell(c=>{
+    c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F3864'}};
+    c.font={bold:true,color:{argb:'FFFFFFFF'},size:11};
+    c.alignment={vertical:'middle',horizontal:'center'};
+    c.border={top:{style:'thin',color:{argb:'FF1F3864'}},bottom:{style:'thin',color:{argb:'FF1F3864'}},left:{style:'thin',color:{argb:'FF1F3864'}},right:{style:'thin',color:{argb:'FF1F3864'}}};
+  });
+  ents.forEach((e,idx)=>{
+    const row = ws.addRow({
+      location:e.location,
+      description:e.description,
+      condition:e.condition,
+      photoId:e.photoId,
+      remarks:e.remarks||(b.code||'')
+    });
+    row.height = 18;
+    const def = isDefect(e.condition);
+    row.eachCell(c=>{
+      c.alignment={vertical:'middle',wrapText:true};
+      c.border={top:{style:'thin',color:{argb:'FFE8EAF0'}},bottom:{style:'thin',color:{argb:'FFE8EAF0'}},left:{style:'thin',color:{argb:'FFE8EAF0'}},right:{style:'thin',color:{argb:'FFE8EAF0'}}};
+      if(def){
+        c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFE4B5'}};
+      } else if(idx%2===1){
+        c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDF2FF'}};
+      }
+    });
+    if(def){
+      const cc = row.getCell('condition');
+      cc.font = {bold:true,color:{argb:'FF7F3300'}};
+    }
+    row.getCell('photoId').alignment = {vertical:'middle',horizontal:'center'};
+  });
+  ws.autoFilter = {from:'A1',to:`E${ents.length+1}`};
+  return { wb, entries:ents, building:b };
+}
+
+/* ============================================================
+   WORD (.DOCX) BUILDER
+   Mirrors Sample_Result.docx layout exactly.
+   Each "page" = 1 table with 11 rows:
+     Row 0: Damage No | Location (2 merged cells)
+     Row 1: Area | Damaged Level (2 merged cells)
+     Row 2: PHOTO | PHOTO (2 merged cells, images 9.11×6.37 cm)
+     Row 3: Specific Location | View Direction | Specific Location | View Direction (4 cells)
+     Row 4: Defect Type | Picture ID | Defect Type | Picture ID (4 cells)
+     Row 5: PHOTO | PHOTO
+     Row 6-7: info+defect
+     Row 8: PHOTO | PHOTO
+     Row 9-10: info+defect
+   = 6 photos per page. Defect photos get a red oval overlay.
+   ============================================================ */
+
+// EMU conversions
+const CM_TO_EMU = 360000;
+const PHOTO_W_EMU = Math.round(9.11 * CM_TO_EMU);   // 3279600
+const PHOTO_H_EMU = Math.round(6.37 * CM_TO_EMU);   // 2293200
+
+function xmlEscape(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function pad3(n){ return String(n).padStart(3,'0'); }
+
+// Generate XML for an inline picture with optional red-oval overlay
+function docxPicXml(relId, ovalRelId, picNum){
+  const picXml = `<w:drawing>
+<wp:inline distT="0" distB="0" distL="0" distR="0">
+<wp:extent cx="${PHOTO_W_EMU}" cy="${PHOTO_H_EMU}"/>
+<wp:effectExtent l="0" t="0" r="0" b="0"/>
+<wp:docPr id="${picNum}" name="Picture ${picNum}"/>
+<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>
+<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+<pic:nvPicPr><pic:cNvPr id="${picNum}" name="Picture ${picNum}"/><pic:cNvPicPr/></pic:nvPicPr>
+<pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>
+<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${PHOTO_W_EMU}" cy="${PHOTO_H_EMU}"/></a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>
+</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>`;
+  return picXml;
+}
+
+// Red oval shape drawn after the picture in its own paragraph (anchored over the photo)
+// We use a floating shape with positionH/positionV relative to the photo's paragraph.
+function docxOvalXml(picNum){
+  // Oval: 175.3 × 145.9 pt from VBA. 1 pt = 12700 EMU
+  const W = Math.round(175.3 * 12700);
+  const H = Math.round(145.9 * 12700);
+  // cell is ~260.5 × 184.65 pt → center offsets: 42.6 × 19.4 pt from cell top-left
+  const OFF_X = Math.round(42.6 * 12700);
+  const OFF_Y = Math.round(19.4 * 12700);
+  return `<w:r><w:rPr/><mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+<mc:Choice xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" Requires="wps">
+<w:drawing>
+<wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="${250 + picNum}" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
+<wp:simplePos x="0" y="0"/>
+<wp:positionH relativeFrom="column"><wp:posOffset>${OFF_X}</wp:posOffset></wp:positionH>
+<wp:positionV relativeFrom="paragraph"><wp:posOffset>${OFF_Y}</wp:posOffset></wp:positionV>
+<wp:extent cx="${W}" cy="${H}"/>
+<wp:effectExtent l="0" t="0" r="0" b="0"/>
+<wp:wrapNone/>
+<wp:docPr id="${9000+picNum}" name="Oval ${picNum}"/>
+<wp:cNvGraphicFramePr/>
+<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+<a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+<wps:wsp>
+<wps:cNvSpPr/>
+<wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${W}" cy="${H}"/></a:xfrm>
+<a:prstGeom prst="ellipse"><a:avLst/></a:prstGeom>
+<a:noFill/>
+<a:ln w="28575"><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:ln>
+</wps:spPr>
+<wps:bodyPr/>
+</wps:wsp>
+</a:graphicData></a:graphic>
+</wp:anchor>
+</w:drawing></mc:Choice></mc:AlternateContent></w:r>`;
+}
+
+// Standard table cell with single paragraph. bold/font customizable.
+function docxCell(content, opts={}){
+  const w = opts.width || 2600;  // twips
+  const gridSpan = opts.gridSpan ? `<w:gridSpan w:val="${opts.gridSpan}"/>` : '';
+  const shd = opts.shading ? `<w:shd w:val="clear" w:color="auto" w:fill="${opts.shading}"/>` : '';
+  const vAlign = opts.vAlign || 'center';
+  return `<w:tc>
+<w:tcPr>
+<w:tcW w:w="${w}" w:type="dxa"/>
+${gridSpan}
+${shd}
+<w:vAlign w:val="${vAlign}"/>
+</w:tcPr>
+${content}
+</w:tc>`;
+}
+
+// Paragraph with runs. runs = [{text, bold, size, color}]
+function docxPara(runs, opts={}){
+  const align = opts.align ? `<w:jc w:val="${opts.align}"/>` : '';
+  const pPr = `<w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>${align}</w:pPr>`;
+  const rXml = runs.map(r=>{
+    const rPr = `<w:rPr>
+${r.bold?'<w:b/>':''}
+<w:rFonts w:ascii="${r.font||'Calibri'}" w:hAnsi="${r.font||'Calibri'}"/>
+<w:sz w:val="${r.size||20}"/>
+<w:szCs w:val="${r.size||20}"/>
+${r.color?`<w:color w:val="${r.color}"/>`:''}
+</w:rPr>`;
+    return `<w:r>${rPr}<w:t xml:space="preserve">${xmlEscape(r.text)}</w:t></w:r>`;
+  }).join('');
+  return `<w:p>${pPr}${rXml}</w:p>`;
+}
+
+// Paragraph containing a drawing (photo + optional oval)
+function docxPicParagraph(relId, picNum, hasDefect){
+  const pPr = `<w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>`;
+  const picRun = `<w:r>${docxPicXml(relId, null, picNum)}</w:r>`;
+  const ovalRun = hasDefect ? docxOvalXml(picNum) : '';
+  return `<w:p>${pPr}${picRun}${ovalRun}</w:p>`;
+}
+
+// Build one "page" (one table with up to 6 entries)
+function buildDocxPage(pageEntries, building, photoRelIds){
+  // pageEntries: array of up to 6 entry objects (can be fewer for last page)
+  // photoRelIds: array of {relId, hasDefect, picNum} in same order
+
+  const EMPTY_CELL = docxCell(docxPara([{text:''}]));
+
+  const headerRow1 = `<w:tr><w:trPr><w:trHeight w:val="340" w:hRule="atLeast"/></w:trPr>
+${docxCell(docxPara([
+  {text:'Damage No.: ',bold:true,size:20},
+  {text:'N/A',size:20}
+]), {width:5200, gridSpan:2, shading:'D9E2F3'})}
+${docxCell(docxPara([
+  {text:'Location: ',bold:true,size:20},
+  {text:building.location||'',size:20}
+]), {width:5200, gridSpan:2, shading:'D9E2F3'})}
+</w:tr>`;
+
+  const headerRow2 = `<w:tr><w:trPr><w:trHeight w:val="340" w:hRule="atLeast"/></w:trPr>
+${docxCell(docxPara([
+  {text:'Area.: ',bold:true,size:20},
+  {text:'Exterior',size:20}
+]), {width:5200, gridSpan:2, shading:'D9E2F3'})}
+${docxCell(docxPara([
+  {text:'Damaged Level: ',bold:true,size:20},
+  {text:'Very Slight',size:20}
+]), {width:5200, gridSpan:2, shading:'D9E2F3'})}
+</w:tr>`;
+
+  // Build 3 blocks, each = photo row + info row + defect row
+  let bodyRows = '';
+  for(let block=0; block<3; block++){
+    const leftIdx = block*2;
+    const rightIdx = block*2+1;
+    const leftE = pageEntries[leftIdx];
+    const rightE = pageEntries[rightIdx];
+    const leftR = photoRelIds[leftIdx];
+    const rightR = photoRelIds[rightIdx];
+
+    // PHOTO row (2 merged cells)
+    const leftPhotoCell = leftE
+      ? docxCell(docxPicParagraph(leftR.relId, leftR.picNum, leftR.hasDefect), {width:5200, gridSpan:2})
+      : docxCell(docxPara([{text:'PHOTO',size:20}], {align:'center'}), {width:5200, gridSpan:2, shading:'F2F2F2'});
+    const rightPhotoCell = rightE
+      ? docxCell(docxPicParagraph(rightR.relId, rightR.picNum, rightR.hasDefect), {width:5200, gridSpan:2})
+      : docxCell(docxPara([{text:'PHOTO',size:20}], {align:'center'}), {width:5200, gridSpan:2, shading:'F2F2F2'});
+    bodyRows += `<w:tr><w:trPr><w:trHeight w:val="3690" w:hRule="exact"/></w:trPr>${leftPhotoCell}${rightPhotoCell}</w:tr>`;
+
+    // INFO row (4 cells)
+    const infoLeft1 = docxCell(docxPara([
+      {text:'Specific Location: ',bold:true,size:18},
+      {text: leftE ? leftE.description : '', size:18}
+    ]), {width:2600});
+    const infoLeft2 = docxCell(docxPara([
+      {text:'View Direction: ',bold:true,size:18},
+      {text: leftE ? leftE.location : '', size:18}
+    ]), {width:2600});
+    const infoRight1 = docxCell(docxPara([
+      {text:'Specific Location: ',bold:true,size:18},
+      {text: rightE ? rightE.description : '', size:18}
+    ]), {width:2600});
+    const infoRight2 = docxCell(docxPara([
+      {text:'View Direction: ',bold:true,size:18},
+      {text: rightE ? rightE.location : '', size:18}
+    ]), {width:2600});
+    bodyRows += `<w:tr>${infoLeft1}${infoLeft2}${infoRight1}${infoRight2}</w:tr>`;
+
+    // DEFECT row (4 cells)
+    const defLeft1 = docxCell(docxPara([
+      {text:'Defect Type: ',bold:true,size:18},
+      {text: leftE ? (isDefect(leftE.condition)?leftE.condition:'N/A') : '', size:18,
+       color: leftE && isDefect(leftE.condition) ? 'C00000' : null,
+       bold: leftE && isDefect(leftE.condition) ? true : false }
+    ]), {width:2600});
+    const defLeft2 = docxCell(docxPara([
+      {text:'Picture ID: ',bold:true,size:18},
+      {text: leftE ? pad3(leftE.photoId) : '', size:18, bold:true}
+    ]), {width:2600});
+    const defRight1 = docxCell(docxPara([
+      {text:'Defect Type: ',bold:true,size:18},
+      {text: rightE ? (isDefect(rightE.condition)?rightE.condition:'N/A') : '', size:18,
+       color: rightE && isDefect(rightE.condition) ? 'C00000' : null,
+       bold: rightE && isDefect(rightE.condition) ? true : false }
+    ]), {width:2600});
+    const defRight2 = docxCell(docxPara([
+      {text:'Picture ID: ',bold:true,size:18},
+      {text: rightE ? pad3(rightE.photoId) : '', size:18, bold:true}
+    ]), {width:2600});
+    bodyRows += `<w:tr>${defLeft1}${defLeft2}${defRight1}${defRight2}</w:tr>`;
+  }
+
+  // Wrap all rows into a table
+  const tblProps = `<w:tblPr>
+<w:tblW w:w="10400" w:type="dxa"/>
+<w:tblBorders>
+<w:top w:val="single" w:sz="4" w:space="0" w:color="1F3864"/>
+<w:left w:val="single" w:sz="4" w:space="0" w:color="1F3864"/>
+<w:bottom w:val="single" w:sz="4" w:space="0" w:color="1F3864"/>
+<w:right w:val="single" w:sz="4" w:space="0" w:color="1F3864"/>
+<w:insideH w:val="single" w:sz="4" w:space="0" w:color="1F3864"/>
+<w:insideV w:val="single" w:sz="4" w:space="0" w:color="1F3864"/>
+</w:tblBorders>
+<w:tblLayout w:type="fixed"/>
+</w:tblPr>
+<w:tblGrid>
+<w:gridCol w:w="2600"/><w:gridCol w:w="2600"/><w:gridCol w:w="2600"/><w:gridCol w:w="2600"/>
+</w:tblGrid>`;
+
+  return `<w:tbl>${tblProps}${headerRow1}${headerRow2}${bodyRows}</w:tbl>`;
+}
+
+async function buildWordForBuilding(buildingId, progressCb){
+  const b = S.buildings.find(x=>x.id===buildingId);
+  const ents = await idbGetByIdx('entries','byBuilding',buildingId);
+  ents.sort((a,b)=>a.photoId-b.photoId);
+
+  const zip = new JSZip();
+
+  // [Content_Types].xml
+  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Default Extension="jpeg" ContentType="image/jpeg"/>
+<Default Extension="jpg" ContentType="image/jpeg"/>
+<Default Extension="png" ContentType="image/png"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+<Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>
+<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+</Types>`);
+
+  // _rels/.rels
+  zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>`);
+
+  // docProps
+  zip.file('docProps/core.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dc:title>PCS Survey - ${xmlEscape(b.name)}</dc:title>
+<dc:creator>PCS Survey App</dc:creator>
+</cp:coreProperties>`);
+  zip.file('docProps/app.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
+<Application>PCS Survey App</Application>
+</Properties>`);
+
+  // styles.xml (minimal)
+  zip.file('word/styles.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>
+</w:styles>`);
+
+  zip.file('word/settings.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat>
+</w:settings>`);
+
+  // Collect all photos & build relationships
+  const rels = [];
+  const photoRelMap = []; // [{relId, hasDefect, picNum}] per entry index
+  let relCounter = 10;    // rIds start from 10 for media to leave room for style/settings
+
+  for(let i=0; i<ents.length; i++){
+    const e = ents[i];
+    const p = await idbGet('photos', e.id);
+    if(!p || !p.blob){
+      photoRelMap.push(null);
+      continue;
+    }
+    const relId = 'rId'+(relCounter++);
+    const fname = `image_${pad3(e.photoId)}.jpg`;
+    // ArrayBuffer from blob
+    const buf = await p.blob.arrayBuffer();
+    zip.file('word/media/'+fname, buf);
+    rels.push(`<Relationship Id="${relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${fname}"/>`);
+    photoRelMap.push({relId, hasDefect: isDefect(e.condition), picNum: e.photoId});
+    if(progressCb && i%5===0) progressCb(i+1, ents.length);
+  }
+
+  // Add style/settings rels
+  rels.unshift(`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`);
+  rels.unshift(`<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>`);
+
+  zip.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+${rels.join('\n')}
+</Relationships>`);
+
+  // Build document body: pages of 6 entries each
+  let bodyXml = '';
+  // Title paragraph
+  bodyXml += docxPara([
+    {text: `${b.name}${b.code?' — '+b.code:''}`, bold:true, size:32, color:'1F3864', font:'Calibri'}
+  ], {align:'center'});
+  bodyXml += docxPara([
+    {text: `${b.location||''}${b.structureType?' · '+b.structureType:''}`, size:22, color:'595959', font:'Calibri'}
+  ], {align:'center'});
+  bodyXml += docxPara([{text:'', size:16}]);
+
+  const PER_PAGE = 6;
+  for(let p=0; p<ents.length; p+=PER_PAGE){
+    const pageEntries = ents.slice(p, p+PER_PAGE);
+    const pageRels = photoRelMap.slice(p, p+PER_PAGE);
+    bodyXml += buildDocxPage(pageEntries, b, pageRels);
+    // page break between tables (except last)
+    if(p+PER_PAGE < ents.length){
+      bodyXml += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+    }
+  }
+
+  zip.file('word/document.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+mc:Ignorable="w14 wp14">
+<w:body>
+${bodyXml}
+<w:sectPr>
+<w:pgSz w:w="11906" w:h="16838"/>
+<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="0" w:footer="0" w:gutter="0"/>
+<w:cols w:space="720"/>
+</w:sectPr>
+</w:body>
+</w:document>`);
+
+  const docxBlob = await zip.generateAsync({
+    type:'blob',
+    mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    compression:'DEFLATE'
+  });
+  return { blob:docxBlob, entries:ents, building:b };
+}
+
+/* ============================================================
+   UNIFIED EXPORTS
+   ============================================================ */
+function safeBldName(b){
+  return ((b.code||b.name||'Building')+'').replace(/[^\w\s-]/g,'').replace(/\s+/g,'_').slice(0,40);
+}
+
+async function exportSubmissionPackage(){
+  if(!S.currentBuildingId){ toast('Select a building','error'); return; }
+  const btn = $('#btnExportSubmission'); const orig = btn.textContent;
+  btn.disabled=true; btn.textContent='⏳ Building Word + Excel + photos...';
+  try{
+    const { wb, entries, building } = await buildExcelForBuilding(S.currentBuildingId);
+    const xlsxBuf = await wb.xlsx.writeBuffer();
+    btn.textContent = `⏳ Inserting ${entries.length} photos into Word...`;
+    const { blob: docxBlob } = await buildWordForBuilding(S.currentBuildingId,
+      (done,total)=>{ btn.textContent = `⏳ Photo ${done}/${total}...`; });
+    btn.textContent = '⏳ Packaging ZIP...';
+
+    const base = `${new Date().toISOString().slice(0,10)}_${safeBldName(building)}_PCS`;
+    const outZip = new JSZip();
+    outZip.file(base+'.docx', docxBlob);
+    outZip.file(base+'.xlsx', xlsxBuf);
+    const pf = outZip.folder('Pictures');
+    for(const e of entries){
+      const p = await idbGet('photos',e.id);
+      if(p && p.blob) pf.file(pad3(e.photoId)+'.jpg', p.blob);
+    }
+    outZip.file('README.txt',
+      `PCS SURVEY — SUBMISSION PACKAGE\n================================\nProject  : ${S.project}\nBuilding : ${building.name}\nCode     : ${building.code||''}\nLocation : ${building.location||''}\nDate     : ${new Date().toISOString().slice(0,10)}\nEntries  : ${entries.length}\n\nCONTENTS:\n  ${base}.docx   — Final Word report with photos, descriptions,\n                   and red ovals on defect photos (ready for client)\n  ${base}.xlsx   — Excel survey log (Location/Description/Condition/Photo ID/Remarks)\n  Pictures/      — All photos, 1:1 square JPEG, 3-digit filenames\n\nPhoto layout in Word matches the Sample_Result format:\n6 photos per page, 9.11cm × 6.37cm each, defect photos marked with red oval.\n`);
+    const zipBlob = await outZip.generateAsync({type:'blob',compression:'DEFLATE'});
+    saveAs(zipBlob, base+'.zip');
+    toast('Submission package exported','success');
+  }catch(err){
+    console.error(err); toast('Export failed: '+err.message,'error');
+  }finally{
+    btn.disabled=false; btn.textContent=orig;
+  }
+}
+
+async function exportWordOnly(){
+  if(!S.currentBuildingId){ toast('Select a building','error'); return; }
+  const btn = $('#btnExportWordOnly'); const orig = btn.textContent;
+  btn.disabled=true; btn.textContent='⏳ Building Word document...';
+  try{
+    const { blob, entries, building } = await buildWordForBuilding(S.currentBuildingId,
+      (done,total)=>{ btn.textContent = `⏳ Photo ${done}/${total}...`; });
+    const base = `${new Date().toISOString().slice(0,10)}_${safeBldName(building)}_PCS`;
+    saveAs(blob, base+'.docx');
+    toast(`Word saved (${entries.length} photos)`,'success');
+  }catch(err){
+    console.error(err); toast('Export failed: '+err.message,'error');
+  }finally{
+    btn.disabled=false; btn.textContent=orig;
+  }
+}
+
+async function exportOne(opts={includePhotos:true}){
+  if(!S.currentBuildingId){ toast('Select a building','error'); return; }
+  const btn = opts.includePhotos ? $('#btnExportOne') : $('#btnExportExcelOnly');
+  const orig = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Building export...';
+  try{
+    const { wb, entries, building } = await buildExcelForBuilding(S.currentBuildingId);
+    const xlsxBuf = await wb.xlsx.writeBuffer();
+    const safeName = (building.name||'Building').replace(/[^\w\s-]/g,'').replace(/\s+/g,'_').slice(0,40);
+    const dateStr = new Date().toISOString().slice(0,10);
+    const baseName = `${dateStr}_${building.code||safeName}_PCS`;
+
+    if(!opts.includePhotos){
+      saveAs(new Blob([xlsxBuf],{type:'application/octet-stream'}), baseName+'.xlsx');
+      toast('Excel saved','success');
+      return;
+    }
+    // ZIP with photos
+    const zip = new JSZip();
+    zip.file(baseName+'.xlsx', xlsxBuf);
+    const photoFolder = zip.folder('Pictures');
+    for(const e of entries){
+      const p = await idbGet('photos', e.id);
+      if(p && p.blob){
+        const fname = `${pad3(e.photoId)}.jpg`;
+        photoFolder.file(fname, p.blob);
+      }
+    }
+    // small readme
+    zip.file('README.txt',
+      `PCS Survey Export\n================\nProject : ${S.project}\nBuilding: ${building.name}\nCode    : ${building.code||''}\nDate    : ${dateStr}\nEntries : ${entries.length}\n\nPhotos are 1:1 square JPEG at device capture resolution.\nExcel follows the corrected PCS format: Location | Description | Condition | Photo ID | Remarks.\n`);
+    const zipBlob = await zip.generateAsync({type:'blob',compression:'STORE'});
+    saveAs(zipBlob, baseName+'.zip');
+    toast('ZIP exported','success');
+  }catch(err){
+    console.error(err); toast('Export failed: '+err.message,'error');
+  }finally{
+    btn.disabled=false; btn.textContent=orig;
+  }
+}
+
+async function exportAll(){
+  if(!S.buildings.length){ toast('No buildings','error'); return; }
+  const btn = $('#btnExportAll'); const orig = btn.textContent;
+  btn.disabled=true; btn.textContent='⏳ Building full export...';
+  try{
+    const zip = new JSZip();
+    const dateStr = new Date().toISOString().slice(0,10);
+    const masterWb = new ExcelJS.Workbook();
+    masterWb.creator='PCS Survey App';
+    let bIdx = 0;
+    for(const b of S.buildings){
+      bIdx++;
+      btn.textContent = `⏳ Building ${bIdx}/${S.buildings.length}: ${b.name.slice(0,20)}...`;
+      const { wb, entries } = await buildExcelForBuilding(b.id);
+      const xlsxBuf = await wb.xlsx.writeBuffer();
+      const safe = safeBldName(b);
+      const base = safe;
+      const folder = zip.folder(base);
+      folder.file(`${base}.xlsx`, xlsxBuf);
+
+      // Word doc per building
+      if(entries.length){
+        btn.textContent = `⏳ Word ${bIdx}/${S.buildings.length}...`;
+        const { blob: docxBlob } = await buildWordForBuilding(b.id);
+        folder.file(`${base}.docx`, docxBlob);
+      }
+
+      const pf = folder.folder('Pictures');
+      for(const e of entries){
+        const p = await idbGet('photos', e.id);
+        if(p && p.blob) pf.file(pad3(e.photoId)+'.jpg', p.blob);
+      }
+      // add as sheet on master
+      const ms = masterWb.addWorksheet((b.code||safe).slice(0,30));
+      ms.columns = [
+        {header:'Location',key:'location',width:22},
+        {header:'Description',key:'description',width:45},
+        {header:'Condition',key:'condition',width:22},
+        {header:'Photo ID',key:'photoId',width:12},
+        {header:'Remarks',key:'remarks',width:22}
+      ];
+      ms.getRow(1).eachCell(c=>{
+        c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F3864'}};
+        c.font={bold:true,color:{argb:'FFFFFFFF'}}; c.alignment={horizontal:'center'};
+      });
+      entries.forEach((e,idx)=>{
+        const r = ms.addRow({location:e.location,description:e.description,condition:e.condition,photoId:e.photoId,remarks:e.remarks||(b.code||'')});
+        if(isDefect(e.condition)){
+          r.eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFE4B5'}}});
+          r.getCell('condition').font={bold:true,color:{argb:'FF7F3300'}};
+        } else if(idx%2===1){
+          r.eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDF2FF'}}});
+        }
+      });
+    }
+    btn.textContent = '⏳ Packaging...';
+    const masterBuf = await masterWb.xlsx.writeBuffer();
+    zip.file(`_MASTER_${dateStr}.xlsx`, masterBuf);
+    zip.file('README.txt',
+      `PCS Survey — FULL EXPORT\n========================\nProject : ${S.project}\nDate    : ${dateStr}\nBuildings: ${S.buildings.length}\n\n_MASTER_*.xlsx contains one sheet per building (summary).\nEach building folder contains:\n  - <name>.docx  : Word report with photos + defect ovals\n  - <name>.xlsx  : Excel survey log\n  - Pictures/    : All photos (1:1 JPEG)\n`);
+    const zipBlob = await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+    saveAs(zipBlob, `PCS_AllBuildings_${dateStr}.zip`);
+    toast('Full export complete','success');
+  }catch(err){
+    console.error(err); toast('Export failed: '+err.message,'error');
+  }finally{
+    btn.disabled=false; btn.textContent=orig;
+  }
+}
+
+$('#btnExportSubmission').onclick = exportSubmissionPackage;
+$('#btnExportWordOnly').onclick = exportWordOnly;
+$('#btnExportOne').onclick = ()=>exportOne({includePhotos:true});
+$('#btnExportExcelOnly').onclick = ()=>exportOne({includePhotos:false});
+$('#btnExportAll').onclick = exportAll;
+
+async function renderExportSummary(){
+  let total=0, defects=0;
+  for(const b of S.buildings){
+    const ents = await idbGetByIdx('entries','byBuilding',b.id);
+    total += ents.length;
+    defects += ents.filter(e=>isDefect(e.condition)).length;
+  }
+  S.allEntriesCount = total;
+  $('#expPhotos').textContent = total;
+  $('#expBlds').textContent = S.buildings.length;
+  $('#expDef').textContent = defects;
+}
+
+/* ---------- backup / restore ---------- */
+$('#btnBackup').onclick = async ()=>{
+  const blds = await idbGetAll('buildings');
+  const ents = await idbGetAll('entries');
+  // photos converted to base64
+  const photos = [];
+  for(const e of ents){
+    const p = await idbGet('photos',e.id);
+    if(p && p.blob){
+      const b64 = await blobToB64(p.blob);
+      photos.push({entryId:e.id,b64});
+    }
+  }
+  const data = {project:S.project,buildings:blds,entries:ents,photos,savedAt:Date.now(),version:1};
+  const blob = new Blob([JSON.stringify(data)],{type:'application/json'});
+  saveAs(blob,`pcs_backup_${new Date().toISOString().slice(0,10)}.json`);
+  toast('Backup saved','success');
+};
+$('#btnRestore').onclick = ()=>$('#restoreInput').click();
+$('#restoreInput').onchange = async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const text = await f.text(); const data = JSON.parse(text);
+  if(!confirm(`Restore ${data.buildings.length} buildings & ${data.entries.length} entries? Existing data will be merged.`)) return;
+  for(const b of data.buildings) await idbPut('buildings',b);
+  for(const e of data.entries) await idbPut('entries',e);
+  for(const p of (data.photos||[])){
+    const blob = await b64ToBlob(p.b64,'image/jpeg');
+    await idbPut('photos',{entryId:p.entryId,blob});
+  }
+  await loadBuildings(); await loadEntries(); renderExportSummary();
+  toast('Restore complete','success');
+};
+$('#btnClearAll').onclick = ()=>{
+  openModal(`
+    <h2>Clear ALL data?</h2>
+    <p style="color:var(--g4);font-size:13.5px;line-height:1.5">
+      Every building, entry, and photo will be deleted from this device.
+      <strong>Backup first!</strong>
+    </p>
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Cancel</button>
+      <button class="danger" id="confirmClear">Clear everything</button>
+    </div>
+  `);
+  $('#confirmClear').onclick = async ()=>{
+    await idbClear('buildings'); await idbClear('entries'); await idbClear('photos');
+    S.currentBuildingId=null;
+    await loadBuildings(); await loadEntries(); renderExportSummary();
+    closeModal(); toast('All data cleared','success');
+  };
+};
+
+function blobToB64(blob){ return new Promise((r)=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(blob); }); }
+async function b64ToBlob(b64){ const res = await fetch(b64); return res.blob(); }
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+$('#settingsBtn').onclick = ()=>{
+  openModal(`
+    <h2>Settings</h2>
+    <label>Project name</label>
+    <input type="text" id="set_project" value="${escapeAttr(S.project)}">
+
+    <label style="margin-top:14px">Date/Time stamp on photos</label>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--g1);padding:10px;border-radius:9px">
+      <input type="checkbox" id="set_stamp" ${S.stampDisabled?'':'checked'} style="width:20px;height:20px;accent-color:var(--orange)">
+      <label for="set_stamp" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--text);flex:1;cursor:pointer">
+        Burn date + time on every photo<br>
+        <span style="color:var(--g3);font-size:11px;font-weight:400">Orange text, bottom-right · ${formatStampDate(new Date())}</span>
+      </label>
+    </div>
+
+    <label style="margin-top:14px">About</label>
+    <div class="hint-text" style="font-size:12px;line-height:1.5;background:var(--g1);padding:10px;border-radius:8px">
+      <strong>PCS Survey</strong> — field data capture for Pre-Condition Surveys.<br>
+      All data stays on this device. Export regularly.<br>
+      Version 1.1 · ${S.allEntriesCount} entries total
+    </div>
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Close</button>
+      <button class="go" id="set_save">Save</button>
+    </div>
+  `);
+  $('#set_save').onclick = ()=>{
+    const v = $('#set_project').value.trim() || 'PCS Survey';
+    S.project = v; localStorage.setItem('pcs.project',v);
+    S.stampDisabled = !$('#set_stamp').checked;
+    localStorage.setItem('pcs.stampDisabled', S.stampDisabled?'1':'0');
+    updateTopbar(); closeModal(); toast('Saved','success');
+  };
+};
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(async function boot(){
+  await openDB();
+  await loadBuildings();
+  await loadEntries();
+  await refreshFromBuilding();
+  if(!S.buildings.length){
+    // first-run: prompt to add building
+    setTimeout(()=>promptNewBuilding(),400);
+  }
+  // install SW for offline (inline)
+  if('serviceWorker' in navigator){
+    const swCode = `
+      const CACHE='pcs-v1';
+      self.addEventListener('install',e=>{self.skipWaiting()});
+      self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});
+      self.addEventListener('fetch',e=>{
+        e.respondWith(
+          caches.open(CACHE).then(async c=>{
+            const r = await c.match(e.request);
+            if(r) return r;
+            try{ const net = await fetch(e.request); if(e.request.method==='GET' && net.ok) c.put(e.request,net.clone()); return net; }
+            catch(_){ return r || new Response('offline',{status:503}); }
+          })
+        );
+      });`;
+    const blob = new Blob([swCode],{type:'application/javascript'});
+    const url = URL.createObjectURL(blob);
+    try{ await navigator.serviceWorker.register(url); }catch(_){}
+  }
+})();
+
+// Prevent accidental back-swipe navigation from losing data
+window.addEventListener('beforeunload', e=>{
+  if(S.photoBlob || $('#descInput').value){
+    e.preventDefault(); e.returnValue='';
+  }
+});
+</script>
+</body>
+</html>
