@@ -1,0 +1,2987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1F3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PCS Survey ALT — BUILDING</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --navy:#1F3864; --navy-d:#132547; --navy-l:#2C4A7C;
+  --orange:#D04A00; --orange-l:#EC6511;
+  --amber:#FFE4B5; --amber-t:#7F3300;
+  --lblue:#EDF2FF;
+  --g1:#F5F6FA; --g2:#E8EAF0; --g3:#9AA0B0; --g4:#4A5064;
+  --text:#1A1D26; --green:#2E7D32; --red:#C62828;
+  --sh:0 2px 8px rgba(31,56,100,.08);
+  --sh-lg:0 8px 24px rgba(31,56,100,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;padding:0;height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:#F3F5FA;
+  color:var(--text);overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;
+}
+input,textarea,select{-webkit-user-select:text;user-select:text;font-family:inherit}
+button{font-family:inherit}
+
+#app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0)}
+
+.topbar{
+  background:linear-gradient(135deg,#0D1F3C 0%,#1F3864 50%,#162D55 100%);
+  color:#fff;
+  padding:calc(env(safe-area-inset-top,0) + 10px) 14px 10px;
+  display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;
+  box-shadow:0 2px 16px rgba(13,31,60,.45);
+  border-bottom:2px solid var(--orange-l);
+}
+.topbar::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,.018) 60px,rgba(255,255,255,.018) 61px);
+  pointer-events:none;
+}
+.topbar-logo{
+  height:28px;width:auto;
+  object-fit:contain;
+  flex-shrink:0;
+  border-radius:6px;
+  padding:2px 6px;
+  background:#fff;
+  box-shadow:0 1px 5px rgba(0,0,0,.25);
+}
+.topbar .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.topbar .brand-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--orange-l),var(--orange));
+  display:grid;place-items:center;font-size:18px;
+  box-shadow:0 2px 8px rgba(208,74,0,.4);
+}
+.topbar .title{flex:1;line-height:1.2;min-width:0}
+.topbar h1{font-size:16px;font-weight:800;margin:0;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .sub{font-size:10.5px;opacity:.72;font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .badge{
+  background:rgba(236,101,17,.22);border:1px solid rgba(236,101,17,.5);
+  color:#EC8B45;font-size:9px;font-weight:800;letter-spacing:.8px;
+  padding:2px 7px;border-radius:20px;text-transform:uppercase;flex-shrink:0;
+}
+.iconbtn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:9px;width:36px;height:36px;display:grid;place-items:center;cursor:pointer;font-size:17px;transition:all .15s}
+.iconbtn:active{background:rgba(255,255,255,.24)}
+.iconbtn.primary{background:var(--orange);border-color:var(--orange)}
+
+.tabs{
+  background:#fff;display:flex;
+  border-bottom:2px solid var(--g2);
+  position:sticky;top:58px;z-index:40;
+  box-shadow:0 2px 8px rgba(31,56,100,.06);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;text-align:center;
+  padding:12px 13px 10px;
+  font-size:11px;font-weight:700;
+  color:var(--g3);cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:all .18s;white-space:nowrap;
+  letter-spacing:.3px;text-transform:uppercase;
+}
+.tab:hover{color:var(--g4);background:var(--g1)}
+.tab.active{
+  color:var(--navy);
+  border-bottom-color:var(--orange-l);
+  background:linear-gradient(180deg,rgba(236,101,17,.04) 0%,transparent 100%);
+}
+.count{
+  background:linear-gradient(135deg,var(--orange-l),var(--orange));
+  color:#fff;border-radius:10px;padding:1px 6px;
+  font-size:9.5px;margin-left:4px;font-weight:800;
+  box-shadow:0 1px 4px rgba(208,74,0,.3);
+}
+
+/* ============ CARDS ============ */
+.card{
+  background:#fff;border-radius:16px;padding:16px;
+  margin:10px 10px 0;
+  box-shadow:0 1px 4px rgba(31,56,100,.06),0 4px 16px rgba(31,56,100,.06);
+  border:1px solid rgba(31,56,100,.06);
+}
+.card h3{
+  margin:0 0 14px;font-size:11px;font-weight:800;
+  color:var(--navy);text-transform:uppercase;letter-spacing:.8px;
+  display:flex;align-items:center;gap:8px;
+  padding-bottom:10px;border-bottom:1.5px solid var(--g2);
+}
+.card h3 .hint{font-size:10.5px;font-weight:500;color:var(--g3);text-transform:none;letter-spacing:0}
+main{flex:1;padding-bottom:80px}
+
+/* ============ FORMS ============ */
+label{display:block;font-size:11.5px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%;padding:10px 12px;
+  border:1.5px solid #DDE2EE;border-radius:11px;
+  font-size:14px;color:var(--text);background:#FAFBFE;
+  transition:all .18s;margin-bottom:10px;
+  box-shadow:0 1px 3px rgba(31,56,100,.04) inset;
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;border-color:var(--navy);
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(31,56,100,.08),0 1px 3px rgba(31,56,100,.04) inset;
+}
+textarea{resize:vertical;min-height:60px;line-height:1.5}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hint-text{font-size:11.5px;color:var(--g3);line-height:1.5;margin-top:-4px;margin-bottom:8px}
+
+/* ============ DIRECTION PICKER ============ */
+.dir-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.dir-btn{
+  padding:9px 4px;font-size:11px;font-weight:700;
+  border:1.5px solid var(--g2);border-radius:10px;
+  background:#fff;color:var(--g4);cursor:pointer;
+  text-align:center;line-height:1.2;transition:all .18s;
+  letter-spacing:.2px;
+}
+.dir-btn:hover{border-color:var(--navy);color:var(--navy);background:var(--lblue)}
+.dir-btn.active{
+  background:linear-gradient(135deg,#1F3864,#2C4A7C);
+  color:#fff;border-color:var(--navy);
+  box-shadow:0 2px 8px rgba(31,56,100,.3);
+}
+.dir-btn.compass{
+  grid-column:1/-1;display:flex;align-items:center;
+  justify-content:center;gap:8px;padding:11px;margin-top:4px;
+  background:linear-gradient(135deg,rgba(31,56,100,.06),rgba(31,56,100,.02));
+  border-style:dashed;
+}
+.dir-btn.compass.active{
+  background:linear-gradient(135deg,var(--orange-l),var(--orange));
+  border-style:solid;border-color:var(--orange);
+}
+
+/* ============ CAMERA ============ */
+.cam-box{
+  background:linear-gradient(135deg,#0D1F3C 0%,#1F3864 100%);
+  border-radius:16px;aspect-ratio:1/1;overflow:hidden;
+  position:relative;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(13,31,60,.25);
+  border:2px solid rgba(255,255,255,.08);
+}
+.cam-placeholder{text-align:center;color:rgba(255,255,255,.5);line-height:1.6}
+.cam-placeholder .ico{font-size:48px;margin-bottom:8px;display:block;opacity:.7}
+.cam-placeholder div{font-size:12.5px;font-weight:600;letter-spacing:.3px}
+.cam-box img{width:100%;height:100%;object-fit:cover}
+.cam-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.cam-actions button{
+  padding:12px 6px;border-radius:12px;font-size:12px;font-weight:800;
+  border:0;cursor:pointer;
+  background:linear-gradient(135deg,#1F3864,#2C4A7C);color:#fff;
+  box-shadow:0 3px 10px rgba(31,56,100,.3);transition:all .15s;
+  letter-spacing:.2px;
+}
+.cam-actions button:active{transform:scale(.97)}
+.cam-actions button.secondary{
+  background:#fff;color:var(--navy);
+  border:1.5px solid var(--g2);
+  box-shadow:0 2px 6px rgba(31,56,100,.08);
+}
+.cam-actions button.scale-btn{
+  background:linear-gradient(135deg,#1B5E20,#2E7D32);color:#fff;
+  box-shadow:0 3px 10px rgba(46,125,50,.35);
+}
+.photo-info{display:flex;justify-content:space-between;font-size:11px;color:var(--g3);margin-top:4px;padding:0 2px}
+
+/* ============ PHOTO ID ============ */
+.pid-wrap{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.pid-wrap input{text-align:center;font-weight:700;margin:0;flex:1}
+.step{width:42px;height:42px;border-radius:10px;border:1.5px solid var(--g2);background:#fff;font-size:20px;font-weight:700;color:var(--navy);cursor:pointer;display:grid;place-items:center;flex-shrink:0}
+
+/* ============ SUBMIT ============ */
+.submit-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:10px 14px calc(env(safe-area-inset-bottom,0) + 10px);
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--g2);
+  display:flex;gap:10px;z-index:30;
+  box-shadow:0 -4px 20px rgba(31,56,100,.10);
+}
+.btn-save{
+  flex:1;padding:14px;
+  background:linear-gradient(135deg,#1F3864,#2C4A7C);
+  color:#fff;border:0;border-radius:13px;font-size:15px;font-weight:800;
+  cursor:pointer;letter-spacing:.2px;
+  box-shadow:0 4px 12px rgba(31,56,100,.35);
+  transition:all .15s;
+}
+.btn-save:active{transform:scale(.98)}
+.btn-reset{
+  width:48px;height:48px;border-radius:13px;
+  border:1.5px solid var(--g2);background:#fff;
+  font-size:18px;cursor:pointer;transition:all .15s;
+}
+.btn-reset:active{background:var(--g2)}
+
+/* ============ LIST TAB ============ */
+.entry{
+  display:flex;align-items:flex-start;gap:10px;background:#fff;
+  border-radius:13px;padding:10px 12px;margin:8px 10px 0;
+  box-shadow:0 1px 4px rgba(31,56,100,.06),0 2px 8px rgba(31,56,100,.04);
+  border:1px solid var(--g2);border-left:3px solid transparent;
+  transition:all .15s;
+}
+.entry.defect{border-left:4px solid var(--orange-l);background:linear-gradient(135deg,rgba(208,74,0,.03),#fff)}
+.entry .thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--g2)}
+.entry .body{flex:1;min-width:0}
+.entry .pid{font-size:11px;font-weight:700;color:var(--orange);margin-bottom:2px}
+.entry .loc{font-size:12px;color:var(--g4);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .desc{font-size:12.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .cond{font-size:11px;color:var(--g3);margin-top:2px;display:block}
+.entry .act{display:flex;flex-direction:column;gap:4px}
+.entry .del{background:#FFE8E8;color:var(--red);border:0;border-radius:8px;padding:6px 8px;font-size:14px;cursor:pointer}
+.empty{text-align:center;padding:60px 24px;color:var(--g3)}
+.empty .ico{font-size:48px;margin-bottom:12px}
+.empty .msg{font-size:13.5px;line-height:1.6}
+
+/* ============ BUILDINGS ============ */
+.bld-add{display:block;width:calc(100% - 20px);margin:10px;padding:13px;background:var(--navy);color:#fff;border:0;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+.bld-card{
+  background:#fff;border-radius:14px;padding:14px;
+  margin:0 10px 10px;
+  box-shadow:0 1px 4px rgba(31,56,100,.06),0 4px 12px rgba(31,56,100,.05);
+  border:1.5px solid transparent;transition:all .18s;
+}
+.bld-card.active{
+  border-color:var(--navy);
+  background:linear-gradient(135deg,rgba(31,56,100,.03),#fff);
+  box-shadow:0 2px 12px rgba(31,56,100,.15);
+}
+.bld-card .name{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:6px;letter-spacing:.1px}
+.bld-card .meta{display:flex;flex-wrap:wrap;gap:5px;font-size:11px;color:var(--g4)}
+.bld-card .meta span{
+  background:var(--g1);border-radius:6px;padding:2px 8px;
+  border:1px solid var(--g2);font-weight:600;
+}
+
+/* ============ MODAL ============ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;padding:0}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-height:90dvh;overflow-y:auto;padding:24px 20px calc(env(safe-area-inset-bottom,0) + 24px)}
+.modal h2{margin:0 0 16px;font-size:17px;font-weight:800;color:var(--navy)}
+.modal .actions{display:flex;gap:10px;margin-top:16px}
+.modal .actions button{flex:1;padding:13px;border-radius:11px;border:0;font-size:14px;font-weight:700;cursor:pointer}
+.modal .cancel{background:var(--g2);color:var(--g4)}
+.modal .go{background:var(--navy);color:#fff}
+.modal .danger{background:var(--red);color:#fff}
+
+/* ============ EXPORT TAB ============ */
+.export-summary{
+  text-align:center;padding:24px 10px 20px;
+  background:linear-gradient(135deg,#0D1F3C 0%,#1F3864 60%,#2C4A7C 100%);
+  margin:10px 10px 0;border-radius:16px;
+  box-shadow:0 4px 20px rgba(13,31,60,.3);
+  border:1px solid rgba(255,255,255,.08);
+}
+.export-summary .big{font-size:52px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px}
+.export-summary .lbl{font-size:11.5px;color:rgba(255,255,255,.6);margin-top:6px;margin-bottom:20px;letter-spacing:.5px;text-transform:uppercase;font-weight:600}
+.export-stats{display:flex;justify-content:center;gap:32px}
+.export-stats .stat .n{font-size:24px;font-weight:900;color:var(--orange-l)}
+.export-stats .stat .l{font-size:10.5px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.4px;font-weight:600;margin-top:2px}
+.export-btn{
+  width:100%;padding:14px;border-radius:12px;border:0;
+  font-size:13.5px;font-weight:800;cursor:pointer;
+  background:linear-gradient(135deg,#1F3864,#2C4A7C);color:#fff;
+  margin-bottom:0;letter-spacing:.2px;
+  box-shadow:0 3px 12px rgba(31,56,100,.3);transition:all .15s;
+}
+.export-btn:active{transform:scale(.98)}
+.export-btn.alt{
+  background:#fff;color:var(--navy);
+  border:1.5px solid var(--g2);
+  box-shadow:0 1px 4px rgba(31,56,100,.08);
+}
+.export-btn:disabled{opacity:.45;pointer-events:none}
+
+/* ============ TOAST ============ */
+.toast{
+  position:fixed;bottom:90px;left:50%;
+  transform:translateX(-50%) translateY(16px) scale(.95);
+  background:rgba(13,31,60,.95);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  color:#fff;padding:10px 20px;border-radius:30px;
+  font-size:13px;font-weight:700;opacity:0;
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;z-index:999;white-space:nowrap;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+  letter-spacing:.2px;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+.toast.success{background:rgba(27,94,32,.95);border-color:rgba(67,160,71,.4)}
+.toast.error{background:rgba(183,28,28,.95);border-color:rgba(239,83,80,.4)}
+
+/* ============ SECURITY LOGIN ============ */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,var(--navy-d) 0%,var(--navy) 60%,var(--navy-l) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-box{
+  background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:340px;
+  box-shadow:0 16px 48px rgba(0,0,0,.35);text-align:center;
+}
+.login-logo{font-size:48px;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.login-sub{font-size:12.5px;color:var(--g3);margin-bottom:28px;line-height:1.5}
+.google-btn{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--g2);
+  background:#fff;font-size:15px;font-weight:600;color:var(--text);
+  cursor:pointer;transition:all .2s;margin-bottom:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08)
+}
+.google-btn:active{transform:scale(.98)}
+.google-btn img{width:22px;height:22px}
+.login-msg{font-size:12.5px;min-height:20px;margin-top:8px;font-weight:600;padding:8px 12px;border-radius:8px}
+.login-msg.error{background:#FFEBEE;color:var(--red)}
+.login-msg.success{background:#E8F5E9;color:#2E7D32}
+.login-msg.info{background:var(--lblue);color:var(--navy)}
+.login-expiry{font-size:11px;color:var(--g3);margin-top:14px;line-height:1.5}
+.login-user{display:flex;align-items:center;gap:10px;background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:14px;text-align:left}
+.login-user img{width:38px;height:38px;border-radius:50%;border:2px solid var(--g2)}
+.login-user .uname{font-size:13px;font-weight:700;color:var(--text)}
+.login-user .uemail{font-size:11px;color:var(--g4)}
+.logout-btn{background:none;border:1px solid var(--g2);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--g4);cursor:pointer;margin-top:4px}
+
+/* ============ CRACK WIDTH ============ */
+.crack-width-wrap{display:flex;gap:8px;align-items:center;margin-top:4px}
+.crack-width-wrap select{flex:1}
+.degree-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;
+  white-space:nowrap;min-width:90px;text-align:center;
+  background:var(--g2);color:var(--g4);transition:all .2s;flex-shrink:0
+}
+.degree-badge.negligible {background:#E8F5E9;color:#2E7D32}
+.degree-badge.very-slight{background:#E3F2FD;color:#1565C0}
+.degree-badge.slight     {background:#FFF8E1;color:#F57F17}
+.degree-badge.moderate   {background:#FFF3E0;color:#E65100}
+.degree-badge.severe     {background:#FFEBEE;color:#C62828}
+.degree-badge.very-severe{background:#880E4F;color:#fff}
+
+/* ============ FIELD MIC ============ */
+.field-mic{position:relative}
+.field-mic textarea{padding-right:46px}
+.micbtn{position:absolute;right:8px;top:8px;width:32px;height:32px;border:0;border-radius:8px;background:var(--g2);color:var(--g4);cursor:pointer;font-size:16px;display:grid;place-items:center}
+.micbtn.listening{background:#FFEBEE;color:var(--red);animation:pulse .8s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ============ GENERAL INFO ============ */
+.info-section-title{
+  font-size:10.5px;font-weight:800;color:var(--navy);text-transform:uppercase;
+  letter-spacing:.8px;padding:7px 12px;
+  background:linear-gradient(135deg,rgba(31,56,100,.07),rgba(31,56,100,.03));
+  border-radius:8px;margin-bottom:10px;
+  border-left:3px solid var(--orange-l);
+}
+.info-field-group{margin-bottom:0}
+
+/* ============ EXTERNAL VIEWS ============ */
+.ext-slot{
+  background:var(--g1);border-radius:12px;padding:12px;margin-bottom:10px;
+  border:2px solid var(--g2);transition:border .2s
+}
+.ext-slot.filled{border-color:var(--green)}
+.ext-slot.filled .slot-label{color:var(--green)}
+.ext-slot-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.slot-label{font-size:12px;font-weight:700;color:var(--navy);flex:1}
+.slot-status{font-size:11px;color:var(--g3)}
+.slot-status.done{color:var(--green);font-weight:700}
+.ext-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;border:2px solid var(--g2);flex-shrink:0}
+.ext-thumb.empty{background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:24px}
+.slot-actions{display:flex;gap:6px}
+.slot-btn{flex:1;padding:9px 6px;border-radius:9px;font-size:12px;font-weight:700;border:0;cursor:pointer;background:var(--navy);color:#fff}
+.slot-btn.secondary{background:var(--g2);color:var(--g4)}
+.slot-btn.remove{background:#FFE8E8;color:var(--red)}
+.ext-count-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ext-count-bar .lbl{font-size:12px;font-weight:700;color:var(--navy)}
+.ext-count-toggle{display:flex;gap:6px}
+.toggle-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;border:1.5px solid var(--g2);background:#fff;color:var(--g4);cursor:pointer}
+.toggle-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* ============ REFERENCES TABLE ============ */
+.ref-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px}
+.ref-table th{background:var(--navy);color:#fff;padding:7px 8px;text-align:center;font-size:11px}
+.ref-table td{padding:6px 8px;border:1px solid var(--g2);vertical-align:top;line-height:1.4}
+.ref-table tr:nth-child(even) td{background:var(--lblue)}
+.ref-cat{font-weight:700;color:var(--navy);text-align:center}
+.ref-degree{font-weight:600;text-align:center}
+.ref-width{text-align:center;font-weight:600;color:var(--orange-l)}
+
+/* ============ LOCATION MAP ============ */
+#mapContainer{width:100%;height:280px;border-radius:10px;overflow:hidden;background:var(--g2);position:relative;margin-bottom:10px}
+#mapContainer iframe{width:100%;height:100%;border:0}
+.coord-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.map-hint{font-size:11.5px;color:var(--g3);line-height:1.5;margin-bottom:8px;background:var(--lblue);padding:8px 10px;border-radius:8px}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ======= LOGIN ======= -->
+<div id="loginScreen" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">📋</div>
+    <div class="login-title">PCS Survey</div>
+    <div class="login-sub">Encardio Rite — Dubai Metro Blue Line<br>Sign in with your Google account to continue</div>
+    <div class="login-user hidden" id="loginUser">
+      <img id="userAvatar" src="" alt="">
+      <div>
+        <div class="uname" id="userName"></div>
+        <div class="uemail" id="userEmail"></div>
+      </div>
+    </div>
+    <button class="google-btn" id="googleSignInBtn">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Sign in with Google
+    </button>
+    <div class="login-msg hidden" id="loginMsg"></div>
+    <button class="logout-btn hidden" id="logoutBtn">Sign out &amp; try another account</button>
+    <div class="login-expiry" id="loginExpiry"></div>
+  </div>
+</div>
+
+<!-- ======= MAIN APP ======= -->
+<div id="app" style="display:flex">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🏢</div>
+      <div class="title">
+        <h1 id="projectTitle">PCS Survey ALT — BUILDING</h1>
+        <div class="sub" id="buildingSub"></div>
+      </div>
+    </div>
+    <span class="badge">FIELD</span>
+    <img src="data:image/jpeg;base64,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" class="topbar-logo" alt="Encardio Rite" title="Encardio Rite Geosystems">
+    <button class="iconbtn" id="settingsBtn" title="Settings">⚙</button>
+  </div>
+
+  <div class="tabs" id="tabBar">
+    <div class="tab active" data-tab="info">📋 Info</div>
+    <div class="tab" data-tab="external">🏛 External</div>
+    <div class="tab" data-tab="capture">📸 Capture</div>
+    <div class="tab" data-tab="list">Entries<span class="count" id="cntEntries">0</span></div>
+    <div class="tab" data-tab="buildings">Buildings<span class="count" id="cntBuildings">0</span></div>
+    <div class="tab" data-tab="export">Export</div>
+  </div>
+
+  <main>
+
+    <!-- ========== INFO TAB ========== -->
+    <section id="tabInfo">
+
+      <!-- Welcome Banner -->
+      <div style="
+        margin:10px 10px 0;
+        background:linear-gradient(135deg,#0D1F3C 0%,#1F3864 55%,#2C4A7C 100%);
+        border-radius:16px;padding:20px 18px;
+        box-shadow:0 4px 20px rgba(13,31,60,.3);
+        border:1px solid rgba(255,255,255,.08);
+        position:relative;overflow:hidden;
+      ">
+        <div style="position:absolute;right:-10px;top:-10px;width:100px;height:100px;background:radial-gradient(circle,rgba(236,101,17,.2),transparent 70%);pointer-events:none"></div>
+        <div style="position:absolute;left:40%;bottom:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(44,74,124,.4),transparent 70%);pointer-events:none"></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--orange-l),var(--orange));border-radius:11px;display:grid;place-items:center;font-size:22px;flex-shrink:0;box-shadow:0 3px 10px rgba(208,74,0,.4)">🏢</div>
+          <div style="flex:1">
+            <div style="color:#fff;font-size:15px;font-weight:800;letter-spacing:.2px">PCS Survey</div>
+            <div style="color:rgba(255,255,255,.6);font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-top:1px">Encardio Rite Geosystems</div>
+          </div>
+          
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;text-align:center;flex:1;min-width:70px">
+            <div style="color:#fff;font-size:18px;font-weight:900" id="bannerBlds">0</div>
+            <div style="color:rgba(255,255,255,.55);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Buildings</div>
+          </div>
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;text-align:center;flex:1;min-width:70px">
+            <div style="color:#fff;font-size:18px;font-weight:900" id="bannerEntries">0</div>
+            <div style="color:rgba(255,255,255,.55);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Entries</div>
+          </div>
+          <div style="background:rgba(236,101,17,.2);border:1px solid rgba(236,101,17,.35);border-radius:8px;padding:6px 12px;text-align:center;flex:1;min-width:70px">
+            <div style="color:var(--orange-l);font-size:18px;font-weight:900" id="bannerDefects">0</div>
+            <div style="color:rgba(255,255,255,.55);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Defects</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Details -->
+      <div class="card">
+        <h3>Project Details</h3>
+        <div class="info-section-title">Project &amp; Parties</div>
+        <label>Project Name</label>
+        <input type="text" id="inf_project" placeholder="e.g. DUBAI METRO BLUE LINE PROJECT RA/RPD/23-9571">
+        <label>Client</label>
+        <input type="text" id="inf_client" placeholder="e.g. Roads & Transport Authority">
+        <label>Consultant</label>
+        <input type="text" id="inf_consultant" placeholder="e.g. Parsons-Atkins Realis">
+        <label>Contractor</label>
+        <input type="text" id="inf_contractor" placeholder="e.g. Mapa Limak CRRC">
+        <label>Service Provider</label>
+        <input type="text" id="inf_service" placeholder="e.g. Encardio Rite Geosystems L.L.C">
+      </div>
+
+      <!-- Building Details -->
+      <div class="card">
+        <h3>Building Details</h3>
+        <div class="info-section-title">Building Identification</div>
+        <div class="row">
+          <div>
+            <label>Building ID</label>
+            <input type="text" id="inf_bid" placeholder="e.g. B-127">
+          </div>
+          <div>
+            <label>Building Name</label>
+            <input type="text" id="inf_bname" placeholder="e.g. Villa-34">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Makani Number</label>
+            <input type="text" id="inf_makani" placeholder="e.g. 3902191009">
+          </div>
+          <div>
+            <label>Plot Number</label>
+            <input type="text" id="inf_plot" placeholder="e.g. —">
+          </div>
+        </div>
+        <label>Address</label>
+        <input type="text" id="inf_address" placeholder="e.g. Al Rashidiya">
+        <div class="row">
+          <div>
+            <label>Survey Date</label>
+            <input type="date" id="inf_date">
+          </div>
+          <div>
+            <label>Type of Building</label>
+            <input type="text" id="inf_type" placeholder="e.g. Residential">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>No. of Levels</label>
+            <input type="text" id="inf_levels" placeholder="e.g. Ground Floor">
+          </div>
+          <div>
+            <label>No. of Basements</label>
+            <input type="text" id="inf_basements" placeholder="e.g. Nil">
+          </div>
+        </div>
+        <label>Age of Building</label>
+        <input type="text" id="inf_age" placeholder="e.g. ~25 years old (As per Google Information)">
+        <label>Dimension of Building</label>
+        <input type="text" id="inf_dim" placeholder="e.g. Foot print: 50m x 38m, Building height: 3.6m">
+        <div class="row">
+          <div>
+            <label>Foundation Type</label>
+            <input type="text" id="inf_foundation" placeholder="e.g. N/A">
+          </div>
+          <div>
+            <label>Structure Form</label>
+            <input type="text" id="inf_structure" placeholder="e.g. N/A">
+          </div>
+        </div>
+        <label>Distance from Alignment</label>
+        <input type="text" id="inf_distance" placeholder="e.g. Nearest distance from Center of Route Alignment 50 m (approx.)">
+      </div>
+
+      <!-- Survey Team -->
+      <div class="card">
+        <h3>Survey Team</h3>
+        <label>Name &amp; Signature of Surveyor</label>
+        <input type="text" id="inf_surveyor" placeholder="e.g. Mr. Adil Khan">
+        <label>Name &amp; Signature of PAJV &amp; MLCC Representative</label>
+        <input type="text" id="inf_rep" placeholder="e.g. Mr. Altamash Ansari">
+      </div>
+
+      <!-- Summary -->
+      <div class="card">
+        <h3>Summary / Comments</h3>
+        <div class="hint-text">Overall condition assessment of the building</div>
+        <div class="field-mic">
+          <textarea id="inf_summary" style="min-height:100px" placeholder="e.g. During the pre-construction survey, the building is generally in fair condition. Observed defects include..."></textarea>
+          <button class="micbtn" id="micSummary">🎤</button>
+        </div>
+      </div>
+
+      <!-- References (Fixed) -->
+      <div class="card">
+        <h3>References <span class="hint">Burland et al. 1977 — fixed</span></h3>
+        <div class="hint-text">Structural Damage Classification after Burland et al, 1977 and Boscardin &amp; Cording, 1989</div>
+        <div style="overflow-x:auto">
+          <table class="ref-table">
+            <thead>
+              <tr>
+                <th>Cat.</th>
+                <th>Degree</th>
+                <th>Crack Width (mm)</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="ref-cat">0</td><td class="ref-degree" style="color:#2E7D32">Negligible</td><td class="ref-width">&lt; 0.1</td><td>Hairline cracks</td></tr>
+              <tr><td class="ref-cat">1</td><td class="ref-degree" style="color:#1565C0">Very Slight</td><td class="ref-width">0.1 – 1</td><td>Fine cracks easily treated during normal redecorations. Perhaps isolated slight fracture. Cracks visible upon close inspection.</td></tr>
+              <tr><td class="ref-cat">2</td><td class="ref-degree" style="color:#F57F17">Slight</td><td class="ref-width">1 – 5</td><td>Cracks easily filled. Redecoration probably required. Several slight fractures. Exterior cracks visible; some re-pointing may be required.</td></tr>
+              <tr><td class="ref-cat">3</td><td class="ref-degree" style="color:#E65100">Moderate</td><td class="ref-width">5 – 15</td><td>Cracks may require cutting out and patching. Doors and windows may stick. Utility services may be interrupted. Water tightness often impaired.</td></tr>
+              <tr><td class="ref-cat">4</td><td class="ref-degree" style="color:#C62828">Severe</td><td class="ref-width">15 – 25</td><td>Extensive repair involving removal and replacement of sections of walls. Windows and door frames distorted. Floor slopes noticeably.</td></tr>
+              <tr><td class="ref-cat">5</td><td class="ref-degree" style="color:#880E4F">Very Severe</td><td class="ref-width">&gt; 25</td><td>Major repair required involving partial or complete reconstruction. Danger of instability.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="hint-text" style="margin-top:8px">
+          Boscardin &amp; Cording (1989) · Burland, Broms &amp; de Mello (1977)
+        </div>
+      </div>
+
+      <!-- Location Map -->
+      <div class="card" style="margin-bottom:10px">
+        <h3>Location Map</h3>
+        <div class="map-hint">📍 Copy coordinates from Google Maps and paste below. Tap <strong>Fill from Paste</strong> to auto-split lat/lng.</div>
+        <div id="mapContainer">
+          <iframe id="mapFrame"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=55.1,25.0,55.6,25.4&layer=mapnik"
+            allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div style="background:#E8F5E9;padding:10px;border-radius:8px;margin-bottom:10px">
+          <label style="margin-bottom:5px">📋 Paste Google Maps Coordinates</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="inf_paste" placeholder="e.g. 25.226611, 55.401808 or 25°13′35″N 55°24′6″E" style="margin:0;flex:1;font-size:13px">
+            <button onclick="fillCoordsFromPaste()" style="padding:10px 14px;background:var(--green);color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+              Fill ↓
+            </button>
+          </div>
+          <div style="font-size:11px;color:var(--g3);margin-top:5px">How to copy from Google Maps: Long press on location → tap coordinates shown at top</div>
+        </div>
+        <div class="coord-row">
+          <div>
+            <label>Latitude</label>
+            <input type="text" id="inf_lat" placeholder="e.g. 25.226611">
+          </div>
+          <div>
+            <label>Longitude</label>
+            <input type="text" id="inf_lng" placeholder="e.g. 55.401808">
+          </div>
+        </div>
+        <button onclick="updateMapFromCoords()" style="width:100%;padding:11px;background:var(--navy);color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:2px">
+          🗺 Update Map from Coordinates
+        </button>
+      </div>
+
+      <!-- Save Info Button -->
+      <div style="padding:0 10px 10px">
+        <button onclick="saveGeneralInfo()" style="width:100%;padding:14px;background:var(--green);color:#fff;border:0;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">
+          💾 Save General Information
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ========== EXTERNAL VIEWS TAB ========== -->
+    <section id="tabExternal" class="hidden">
+
+      <div class="card">
+        <h3>External Views <span class="hint">building elevations</span></h3>
+        <div class="ext-count-bar">
+          <span class="lbl">Number of external views:</span>
+          <div class="ext-count-toggle">
+            <button class="toggle-btn active" id="tog4" onclick="setExtCount(4)">4 Views</button>
+            <button class="toggle-btn" id="tog6" onclick="setExtCount(6)">6 Views</button>
+          </div>
+        </div>
+        <div class="hint-text">Select directions for each slot, then capture photos.</div>
+      </div>
+
+      <div id="extSlots" style="padding:0 10px 10px"></div>
+
+      <!-- Hidden file inputs for external views -->
+      <input type="file" id="extFileInput" accept="image/*" capture="environment" class="hidden">
+      <input type="file" id="extGalleryInput" accept="image/*" class="hidden">
+
+    </section>
+
+    <!-- ========== CAPTURE TAB ========== -->
+    <section id="tabCapture" class="hidden">
+
+      <div class="card">
+        <h3>Photo <span class="hint" id="photoCardHint">full quality · stamped</span></h3>
+        <div class="cam-box" id="camBox">
+          <div class="cam-placeholder" id="camPlaceholder">
+            <div class="ico">📷</div>
+            <div>Tap Capture to open camera<br>or Gallery to pick a photo</div>
+          </div>
+          <img id="camPreview" class="hidden" alt="">
+          <canvas id="camCanvas" class="hidden"></canvas>
+        </div>
+        <div class="cam-actions">
+          <button id="btnCapture">📸 Capture</button>
+          <button class="secondary" id="btnGallery">📂 Gallery</button>
+          <button class="scale-btn" id="btnScale" title="Capture photo with crack meter scale">📏 By Scale</button>
+        </div>
+        <div class="photo-info" id="photoInfo"><span>No photo</span><span></span></div>
+        <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
+        <input type="file" id="galleryInput" accept="image/*" class="hidden">
+        <input type="file" id="scaleInput" accept="image/*" capture="environment" class="hidden">
+      </div>
+
+      <div class="card">
+        <h3>Direction</h3>
+        <div class="dir-wrap" id="dirWrap">
+          <button class="dir-btn" data-dir="North">North</button>
+          <button class="dir-btn" data-dir="East">East</button>
+          <button class="dir-btn" data-dir="South">South</button>
+          <button class="dir-btn" data-dir="West">West</button>
+          <button class="dir-btn" data-dir="North East">North East</button>
+          <button class="dir-btn" data-dir="South East">South East</button>
+          <button class="dir-btn" data-dir="South West">South West</button>
+          <button class="dir-btn" data-dir="North West">North West</button>
+          <button class="dir-btn" data-dir="North to South">North → South</button>
+          <button class="dir-btn" data-dir="South to North">South → North</button>
+          <button class="dir-btn" data-dir="East to West">East → West</button>
+          <button class="dir-btn" data-dir="West to East">West → East</button>
+          <button class="dir-btn" data-dir="North East to South West">NE → SW</button>
+          <button class="dir-btn" data-dir="South West to North East">SW → NE</button>
+          <button class="dir-btn" data-dir="North West to South East">NW → SE</button>
+          <button class="dir-btn" data-dir="South East to North West">SE → NW</button>
+          <button class="dir-btn compass" id="compassBtn">
+            <span class="arrow">🧭</span><span id="compassLabel">Use Compass</span>
+          </button>
+        </div>
+        <div class="hint-text" id="compassHint">Tap a direction, or use phone compass for auto-fill</div>
+
+        <label style="margin-top:14px">Side (suffix)</label>
+        <select id="sideSuffix">
+          <option value="Side">Side (default)</option>
+          <option value="">— none —</option>
+          <option value="Wing">Wing</option>
+          <option value="Elevation">Elevation</option>
+          <option value="Face">Face</option>
+          <option value="Floor">Floor</option>
+          <option value="Ceiling">Ceiling</option>
+          <option value="Step / Stair">Step / Stair</option>
+          <option value="Column">Column</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <h3>Description <span class="hint">what's in the photo</span></h3>
+        <div class="field-mic">
+          <textarea id="descInput" placeholder="e.g. Outer Wall Crack, Column Plaster Damaged, Parking Area Full View..."></textarea>
+          <button class="micbtn" id="micDesc" title="Voice">🎤</button>
+        </div>
+        <div class="hint-text">Handwrite or speak — auto-capitalised on export</div>
+      </div>
+
+      <div class="card">
+        <h3>Condition / Defect</h3>
+        <select id="conditionSelect">
+          <option value="N/A">N/A — no defect (full view)</option>
+          <optgroup label="— Quick pick —">
+            <option>Crack</option>
+            <option>Damage</option>
+            <option>Tiles Crack</option>
+            <option>Tiles Broken</option>
+            <option>Plaster Damage</option>
+            <option>Paint Peel Off</option>
+            <option>Paint Removed</option>
+            <option>Rust</option>
+            <option>Honeycomb</option>
+            <option>Seepage</option>
+          </optgroup>
+          <optgroup label="— All structural —">
+            <option>Wall Crack</option>
+            <option>Floor Crack</option>
+            <option>Ceiling Gap</option>
+            <option>Joint Crack</option>
+            <option>Joint Gap</option>
+            <option>Corner Damage</option>
+            <option>Crack &amp; Rust</option>
+            <option>Plaster Delamination &amp; Paint Peeling</option>
+          </optgroup>
+          <optgroup label="— All paint / surface —">
+            <option>Paint Crack</option>
+            <option>Paint Crack &amp; Rust</option>
+            <option>Paint Damage</option>
+            <option>Paint Mark</option>
+            <option>Paint Peel Off &amp; Crack</option>
+            <option>Paint Peel-off</option>
+            <option>Paint Removed &amp; Crack</option>
+            <option>Colour Removed</option>
+            <option>Discolouration</option>
+            <option>Pencil Mark</option>
+            <option>Surface Abrasion</option>
+          </optgroup>
+          <optgroup label="— All tiles / floor —">
+            <option>Tiles Gap</option>
+            <option>Tiles Loose</option>
+            <option>Floor Damage</option>
+          </optgroup>
+          <optgroup label="— All panels / fittings —">
+            <option>Display Damage</option>
+            <option>Grip Damage</option>
+            <option>Panel Damage</option>
+            <option>Panel Scratch</option>
+            <option>Panel Uneven</option>
+            <option>Scratch</option>
+            <option>Scratch &amp; Damage</option>
+            <option>Sign Damage</option>
+            <option>Subframe Loosening</option>
+            <option>Misalignment</option>
+          </optgroup>
+          <optgroup label="— Other —">
+            <option>Gap</option>
+            <option>Loose</option>
+            <option>Broken</option>
+            <option>Chipped</option>
+            <option>Rust &amp; Discolouration</option>
+            <option>Honey Comb</option>
+            <option>Seepage / Damage</option>
+          </optgroup>
+          <optgroup label="— Al Marwan / Composite —">
+            <option>Glass Broken</option>
+            <option>Concrete Damage</option>
+            <option>Crack and Damage</option>
+            <option>Crack / Paint Peel Off</option>
+            <option>Damage / Crack</option>
+            <option>Paint Crack / Paint Peel Off</option>
+            <option>Paint Crack / Plaster Crack</option>
+            <option>Paint Peel Off / Crack</option>
+            <option>Paint Peel Off / Paint Crack</option>
+            <option>Paint Peel Off / Plaster Damage</option>
+            <option>Plaster Crack</option>
+            <option>Plaster Crack / Damage</option>
+            <option>Plaster Damage / Crack</option>
+            <option>Plaster Damage / Tiles Damaged</option>
+            <option>Tiles Crack / Damage</option>
+            <option>Tiles Damaged</option>
+            <option>Tiles Loose / Damage</option>
+            <option>Tiles Loose / Joint Crack</option>
+            <option>Tiles Loose and Damaged</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="card" id="crackWidthCard">
+        <h3>Crack Width <span class="hint">optional — if crack is measured</span></h3>
+        <div class="crack-width-wrap">
+          <select id="crackWidthSelect">
+            <option value="">— Not measured —</option>
+            <optgroup label="— Negligible (Cat. 0) &lt;0.1mm —">
+              <option value="0.05">0.05mm (hairline)</option>
+            </optgroup>
+            <optgroup label="— Very Slight (Cat. 1) 0.1–1mm —">
+              <option value="0.1">0.1mm</option>
+              <option value="0.2">0.2mm</option>
+              <option value="0.3">0.3mm</option>
+              <option value="0.5">0.5mm</option>
+              <option value="0.8">0.8mm</option>
+              <option value="1.0">1.0mm</option>
+            </optgroup>
+            <optgroup label="— Slight (Cat. 2) 1–5mm —">
+              <option value="1.5">1.5mm</option>
+              <option value="2.0">2.0mm</option>
+              <option value="2.5">2.5mm</option>
+              <option value="3.0">3.0mm</option>
+              <option value="4.0">4.0mm</option>
+              <option value="5.0">5.0mm</option>
+            </optgroup>
+            <optgroup label="— Moderate (Cat. 3) 5–15mm —">
+              <option value="6.0">6.0mm</option>
+              <option value="8.0">8.0mm</option>
+              <option value="10.0">10.0mm</option>
+              <option value="12.0">12.0mm</option>
+              <option value="15.0">15.0mm</option>
+            </optgroup>
+            <optgroup label="— Severe (Cat. 4) 15–25mm —">
+              <option value="18.0">18.0mm</option>
+              <option value="20.0">20.0mm</option>
+              <option value="25.0">25.0mm</option>
+            </optgroup>
+            <optgroup label="— Very Severe (Cat. 5) &gt;25mm —">
+              <option value="30.0">30.0mm</option>
+              <option value="40.0">40.0mm</option>
+              <option value="50.0">&gt;50mm</option>
+            </optgroup>
+          </select>
+          <span class="degree-badge" id="degreeBadge">No Width</span>
+        </div>
+        <div class="hint-text" id="crackWidthHint">Select a width → degree auto-assigned per Burland et al. (1977)</div>
+      </div>
+
+      <div class="card">
+        <h3>Photo ID <span class="hint">auto-numbered</span></h3>
+        <div class="pid-wrap">
+          <button class="step" id="pidDn">−</button>
+          <input type="number" id="photoId" value="1" min="1">
+          <button class="step" id="pidUp">+</button>
+        </div>
+        <div class="hint-text">Continues from last saved entry. Edit if needed.</div>
+
+        <label style="margin-top:14px">Remarks <span style="font-weight:400;color:var(--g3);text-transform:none;letter-spacing:0">(optional)</span></label>
+        <div class="field-mic">
+          <textarea id="remarksInput" placeholder="e.g. Str-09, RPN-292 to 293" style="min-height:44px"></textarea>
+          <button class="micbtn" id="micRemarks">🎤</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========== LIST TAB ========== -->
+    <section id="tabList" class="hidden">
+      <div id="entryList"></div>
+      <div class="empty hidden" id="emptyList">
+        <div class="ico">📋</div>
+        <div class="msg">No entries yet for this building.<br>Capture a photo to start.</div>
+      </div>
+    </section>
+
+    <!-- ========== BUILDINGS TAB ========== -->
+    <section id="tabBuildings" class="hidden">
+      <button class="bld-add" id="btnAddBld">＋ New Building</button>
+      <div id="buildingList"></div>
+      <div class="empty hidden" id="emptyBlds">
+        <div class="ico">🏢</div>
+        <div class="msg">No buildings yet.<br>Tap <strong>＋ New Building</strong> to start.</div>
+      </div>
+    </section>
+
+    <!-- ========== EXPORT TAB ========== -->
+    <section id="tabExport" class="hidden">
+      <div class="export-summary" id="exportSummary">
+        <div class="big" id="expPhotos">0</div>
+        <div class="lbl">Total photos captured</div>
+        <div class="export-stats">
+          <div class="stat"><div class="n" id="expBlds">0</div><div class="l">Buildings</div></div>
+          <div class="stat"><div class="n" id="expDef">0</div><div class="l">Defects</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Final submission package</h3>
+        <div class="hint-text" style="margin-bottom:10px">Word report + Excel log + all photos. One ZIP.</div>
+        <button class="export-btn" id="btnExportSubmission">📝 Export Word + Excel + Photos</button>
+      </div>
+      <div class="card">
+        <h3>Individual exports</h3>
+        <button class="export-btn alt" id="btnExportWordOnly" style="margin-bottom:8px">📝 Word only (with photos)</button>
+        <button class="export-btn alt" id="btnExportOne" style="margin-bottom:8px">📊 Excel + Photos ZIP</button>
+        <button class="export-btn alt" id="btnExportExcelOnly">📄 Excel only</button>
+      </div>
+      <div class="card">
+        <h3>Export ALL buildings</h3>
+        <button class="export-btn" id="btnExportAll">📦 Export All (ZIP)</button>
+      </div>
+      <div class="card">
+        <h3>Data management</h3>
+        <div id="storageInfo" style="font-size:12px;color:var(--g4);background:var(--g1);padding:10px;border-radius:8px;margin-bottom:10px;line-height:1.6">
+          📦 Storage: checking...
+        </div>
+        <div style="font-size:11.5px;color:var(--orange);background:#FFF3E0;padding:8px 10px;border-radius:8px;margin-bottom:10px;line-height:1.5">
+          ⚠️ <strong>Large survey tip:</strong> Export each building after completing it, then clear its data. Do not accumulate all 800 buildings on one device at once.
+        </div>
+        <button class="export-btn alt" id="btnBackup" style="margin-bottom:8px">💾 Backup (JSON)</button>
+        <button class="export-btn alt" id="btnRestore" style="margin-bottom:8px;background:var(--g4)">📥 Restore from backup</button>
+        <button class="export-btn alt" id="btnClearBuilding" style="margin-bottom:8px;background:#E65100;color:#fff">🧹 Clear current building data</button>
+        <button class="export-btn alt" id="btnClearAll" style="background:var(--red)">🗑 Clear ALL data</button>
+        <input type="file" id="restoreInput" accept=".json" class="hidden">
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Fixed submit bar (capture tab only) -->
+  <div class="submit-bar" id="submitBar" style="display:none">
+    <button class="btn-save" id="btnSave">💾 Save entry</button>
+    <button class="btn-reset" id="btnReset" title="Clear form">↺</button>
+  </div>
+
+</div>
+
+<!-- ======= MODALS ======= -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   PCS SURVEY APP v5 — Field tool for Pre-Condition Surveys
+   Single-file PWA · offline-first · IndexedDB storage
+   ============================================================ */
+
+/* ── GOOGLE AUTH CONFIG ────────────────────────────────────── */
+const GOOGLE_CLIENT_ID = '1010783097390-h1svetrdnsh58p5vl1fee7hfvta83scv.apps.googleusercontent.com';
+const EXPIRY_DATE      = '2026-12-31';
+const SESSION_KEY      = 'pcs.gauth';
+const SESSION_HOURS    = 12;
+
+const ALLOWED_EMAILS = [
+  'gadauh824@gmail.com',        // Admin
+  'ergsshobha@gmail.com',       // Surveyor
+];
+
+(function initGoogleAuth(){
+  const expEl   = document.getElementById('loginExpiry');
+  const msgEl   = document.getElementById('loginMsg');
+  const signBtn = document.getElementById('googleSignInBtn');
+  const logoutB = document.getElementById('logoutBtn');
+  const userBox = document.getElementById('loginUser');
+
+  const today = new Date().toISOString().slice(0,10);
+  if(today > EXPIRY_DATE){
+    showMsg('Access expired. Please contact your supervisor.','error');
+    signBtn.disabled = true;
+    expEl.textContent = `Access expired: ${EXPIRY_DATE}`;
+    return;
+  }
+  expEl.textContent = `Access valid until: ${EXPIRY_DATE}`;
+
+  try{
+    const sess = JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+    if(sess && sess.email && Date.now()-sess.ts < SESSION_HOURS*3600000){
+      if(ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(sess.email.toLowerCase())){
+        unlockApp(sess.name); return;
+      }
+    }
+  }catch(e){}
+
+  signBtn.addEventListener('click', handleGoogleSignIn);
+  logoutB.addEventListener('click', handleLogout);
+
+  function handleGoogleSignIn(){
+    signBtn.textContent = '⏳ Signing in...';
+    signBtn.disabled = true;
+    showMsg('Opening Google Sign-In...','info');
+    if(typeof google === 'undefined'){
+      showMsg('Google Sign-In unavailable. Check internet connection.','error');
+      signBtn.disabled = false;
+      signBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px">Sign in with Google';
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+    google.accounts.id.prompt((notification)=>{
+      if(notification.isNotDisplayed() || notification.isSkippedMoment()){
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInBtn'),
+          {theme:'outline', size:'large', width:280, text:'signin_with'}
+        );
+        signBtn.disabled = false;
+      }
+    });
+  }
+
+  function handleCredential(response){
+    try{
+      const payload = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      const email = payload.email || '';
+      const name  = payload.name  || email;
+      const pic   = payload.picture || '';
+      document.getElementById('userName').textContent  = name;
+      document.getElementById('userEmail').textContent = email;
+      document.getElementById('userAvatar').src        = pic;
+      userBox.classList.remove('hidden');
+      signBtn.classList.add('hidden');
+      if(ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(email.toLowerCase())){
+        showMsg(`✅ Access granted. Welcome, ${name.split(' ')[0]}!`,'success');
+        localStorage.setItem(SESSION_KEY, JSON.stringify({email,name,ts:Date.now()}));
+        setTimeout(()=>unlockApp(name), 1200);
+      } else {
+        showMsg(`❌ Access denied for ${email}. Contact your supervisor.`,'error');
+        logoutB.classList.remove('hidden');
+        google.accounts.id.revoke(email, ()=>{});
+      }
+    }catch(err){
+      showMsg('Sign-in failed. Please try again.','error');
+      signBtn.disabled = false;
+      signBtn.classList.remove('hidden');
+    }
+  }
+
+  function handleLogout(){
+    localStorage.removeItem(SESSION_KEY);
+    userBox.classList.add('hidden');
+    logoutB.classList.add('hidden');
+    msgEl.classList.add('hidden');
+    signBtn.classList.remove('hidden');
+    signBtn.disabled = false;
+    signBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px;height:22px"> Sign in with Google';
+  }
+
+  function showMsg(text, type){
+    msgEl.textContent = text;
+    msgEl.className   = `login-msg ${type}`;
+    msgEl.classList.remove('hidden');
+  }
+})();
+
+function unlockApp(name){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  if(name){
+    const sub = document.getElementById('buildingSub');
+    // subtitle will update when building is selected
+  }
+}
+
+/* ── STATE ─────────────────────────────────────────────────── */
+const S = {
+  project: localStorage.getItem('pcs.project') || 'PCS Survey',  // title shown in topbar
+  currentBuildingId: null,
+  buildings: [],
+  entries: [],
+  allEntriesCount: 0,
+  photoBlob: null,
+  photoMeta: null,
+  stream: null,
+  direction: '',
+  recognition: null,
+  currentMicField: null,
+  stampDisabled: localStorage.getItem('pcs.stampDisabled')==='1',
+  scaleMode: false,
+  // External views
+  extCount: 4,
+  extSlots: [],    // [{dir, photoBlob, photoMeta, label}]
+  extActiveSlot: -1,
+};
+
+/* ── GENERAL INFO STATE ────────────────────────────────────── */
+const INFO_KEY = 'pcs.generalInfo';
+function saveGeneralInfo(){
+  const data = {
+    project:   document.getElementById('inf_project').value.trim(),
+    client:    document.getElementById('inf_client').value.trim(),
+    consultant:document.getElementById('inf_consultant').value.trim(),
+    contractor:document.getElementById('inf_contractor').value.trim(),
+    service:   document.getElementById('inf_service').value.trim(),
+    bid:       document.getElementById('inf_bid').value.trim(),
+    bname:     document.getElementById('inf_bname').value.trim(),
+    makani:    document.getElementById('inf_makani').value.trim(),
+    plot:      document.getElementById('inf_plot').value.trim(),
+    address:   document.getElementById('inf_address').value.trim(),
+    date:      document.getElementById('inf_date').value,
+    type:      document.getElementById('inf_type').value.trim(),
+    levels:    document.getElementById('inf_levels').value.trim(),
+    basements: document.getElementById('inf_basements').value.trim(),
+    age:       document.getElementById('inf_age').value.trim(),
+    dim:       document.getElementById('inf_dim').value.trim(),
+    foundation:document.getElementById('inf_foundation').value.trim(),
+    structure: document.getElementById('inf_structure').value.trim(),
+    distance:  document.getElementById('inf_distance').value.trim(),
+    surveyor:  document.getElementById('inf_surveyor').value.trim(),
+    rep:       document.getElementById('inf_rep').value.trim(),
+    summary:   document.getElementById('inf_summary').value.trim(),
+    lat:       document.getElementById('inf_lat').value.trim(),
+    lng:       document.getElementById('inf_lng').value.trim(),
+  };
+  localStorage.setItem(INFO_KEY, JSON.stringify(data));
+  toast('General information saved ✓','success');
+}
+
+function loadGeneralInfo(){
+  try{
+    const data = JSON.parse(localStorage.getItem(INFO_KEY)||'null');
+    if(!data) return;
+    const fields = ['project','client','consultant','contractor','service','bid','bname','makani',
+      'plot','address','date','type','levels','basements','age','dim','foundation','structure',
+      'distance','surveyor','rep','summary','lat','lng'];
+    fields.forEach(k=>{
+      const el = document.getElementById('inf_'+k);
+      if(el && data[k]) el.value = data[k];
+    });
+    if(data.lat && data.lng) updateMapFromCoords();
+  }catch(e){}
+}
+
+function fillCoordsFromPaste(){
+  const raw = document.getElementById('inf_paste').value.trim();
+  if(!raw){ toast('Paste coordinates first','error'); return; }
+  let lat=null, lng=null;
+
+  // Format 1: "25.226611, 55.401808" or "25.226611,55.401808"
+  let m = raw.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+  if(m){ lat=parseFloat(m[1]); lng=parseFloat(m[2]); }
+
+  // Format 2: "25°13'35"N, 55°24'6"E" DMS format
+  if(!lat){
+    const dms = raw.match(/(\d+)[°d]\s*(\d+)['′]\s*([\d.]+)["″]?\s*([NS])[,\s]+(\d+)[°d]\s*(\d+)['′]\s*([\d.]+)["″]?\s*([EW])/i);
+    if(dms){
+      lat = (parseInt(dms[1]) + parseInt(dms[2])/60 + parseFloat(dms[3])/3600) * (dms[4].toUpperCase()==='S'?-1:1);
+      lng = (parseInt(dms[5]) + parseInt(dms[6])/60 + parseFloat(dms[7])/3600) * (dms[8].toUpperCase()==='W'?-1:1);
+    }
+  }
+
+  // Format 3: two numbers separated by space "25.226611 55.401808"
+  if(!lat){
+    m = raw.match(/(-?\d+\.\d+)\s+(-?\d+\.\d+)/);
+    if(m){ lat=parseFloat(m[1]); lng=parseFloat(m[2]); }
+  }
+
+  if(!lat || !lng || isNaN(lat) || isNaN(lng)){
+    toast('Could not read coordinates. Use: 25.226611, 55.401808','error');
+    return;
+  }
+  // Validate Dubai/UAE range roughly
+  document.getElementById('inf_lat').value = lat.toFixed(6);
+  document.getElementById('inf_lng').value = lng.toFixed(6);
+  document.getElementById('inf_paste').value = '';
+  toast('Coordinates filled: ' + lat.toFixed(6) + ', ' + lng.toFixed(6), 'success');
+  updateMapFromCoords();
+}
+
+function updateMapFromCoords(){
+  const lat = parseFloat(document.getElementById('inf_lat').value);
+  const lng = parseFloat(document.getElementById('inf_lng').value);
+  if(isNaN(lat)||isNaN(lng)){ toast('Enter valid coordinates first','error'); return; }
+  const d = 0.003;
+  const frame = document.getElementById('mapFrame');
+  frame.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-d},${lat-d},${lng+d},${lat+d}&layer=mapnik&marker=${lat},${lng}`;
+  toast('Map updated');
+}
+
+/* ── EXTERNAL VIEWS ────────────────────────────────────────── */
+const EXT_DIRECTIONS = [
+  'North','South','East','West',
+  'North East','North West','South East','South West',
+  'North to South','South to North','East to West','West to East'
+];
+
+const DEFAULT_4 = ['North','South','East','West'];
+const DEFAULT_6 = ['North','South','East','West','North East','North West'];
+
+function setExtCount(n){
+  S.extCount = n;
+  document.getElementById('tog4').classList.toggle('active', n===4);
+  document.getElementById('tog6').classList.toggle('active', n===6);
+  // Re-init slots keeping existing data
+  const defaults = n===4 ? DEFAULT_4 : DEFAULT_6;
+  const old = [...S.extSlots];
+  S.extSlots = [];
+  for(let i=0;i<n;i++){
+    S.extSlots.push(old[i] || {dir: defaults[i]||'', photoBlob:null, photoMeta:null, label:''});
+  }
+  renderExtSlots();
+}
+
+function renderExtSlots(){
+  const container = document.getElementById('extSlots');
+  container.innerHTML = S.extSlots.map((slot,i)=>`
+    <div class="ext-slot ${slot.photoBlob?'filled':''}" id="extSlot_${i}">
+      <div class="ext-slot-top">
+        <div>
+          <div class="slot-label">View ${i+1}</div>
+          <div class="slot-status ${slot.photoBlob?'done':''}">${slot.photoBlob?'✅ Photo captured':'⬜ No photo'}</div>
+        </div>
+        ${slot.photoBlob
+          ? `<img class="ext-thumb" id="extThumb_${i}" alt="View ${i+1}">`
+          : `<div class="ext-thumb empty">📷</div>`}
+      </div>
+      <label style="margin-bottom:4px">Direction</label>
+      <select id="extDir_${i}" style="margin-bottom:8px" onchange="S.extSlots[${i}].dir=this.value">
+        <option value="">— Select direction —</option>
+        ${EXT_DIRECTIONS.map(d=>`<option value="${d}" ${slot.dir===d?'selected':''}>${d}</option>`).join('')}
+      </select>
+      <div class="slot-actions">
+        <button class="slot-btn" onclick="captureExtSlot(${i})">📸 Capture</button>
+        <button class="slot-btn secondary" onclick="galleryExtSlot(${i})">📂 Gallery</button>
+        ${slot.photoBlob?`<button class="slot-btn remove" onclick="removeExtSlot(${i})">✕</button>`:''}
+      </div>
+    </div>
+  `).join('');
+  // Load blob images
+  S.extSlots.forEach((slot,i)=>{
+    if(slot.photoBlob){
+      const img = document.getElementById('extThumb_'+i);
+      if(img) img.src = URL.createObjectURL(slot.photoBlob);
+    }
+  });
+}
+
+function captureExtSlot(idx){
+  S.extActiveSlot = idx;
+  const fi = document.getElementById('extFileInput');
+  fi.value = '';
+  fi.click();
+}
+function galleryExtSlot(idx){
+  S.extActiveSlot = idx;
+  const fi = document.getElementById('extGalleryInput');
+  fi.value = '';
+  fi.click();
+}
+function removeExtSlot(idx){
+  S.extSlots[idx].photoBlob = null;
+  S.extSlots[idx].photoMeta = null;
+  renderExtSlots();
+}
+
+document.getElementById('extFileInput').onchange = e=>{
+  if(e.target.files[0]) processExtPhoto(e.target.files[0]);
+};
+document.getElementById('extGalleryInput').onchange = e=>{
+  if(e.target.files[0]) processExtPhoto(e.target.files[0]);
+};
+
+function processExtPhoto(file){
+  const idx = S.extActiveSlot;
+  if(idx < 0) return;
+  const img = new Image();
+  img.onload = ()=>{
+    const size = Math.min(img.naturalWidth, img.naturalHeight);
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d');
+    const sx = (img.naturalWidth-size)/2;
+    const sy = (img.naturalHeight-size)/2;
+    ctx.drawImage(img, sx,sy,size,size, 0,0,size,size);
+    const stampDate = file.lastModified ? new Date(file.lastModified) : new Date();
+    stampDateTime(ctx, size, size, stampDate);
+    c.toBlob(blob=>{
+      S.extSlots[idx].photoBlob = blob;
+      S.extSlots[idx].photoMeta = {w:size,h:size,size:blob.size};
+      // update dir from select if changed
+      const sel = document.getElementById('extDir_'+idx);
+      if(sel) S.extSlots[idx].dir = sel.value;
+      toast(`View ${idx+1} saved ✓`,'success');
+      renderExtSlots();
+    },'image/jpeg',0.95);
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+/* ── SPELLING / TITLE-CASE ─────────────────────────────────── */
+const SPELL_MAP = {
+  "tails":"Tiles","easst":"East","piller":"Pillar","coller":"Column",
+  "gipsum":"Gypsum","pasage":"Passage","acess":"Access","damge":"Damage",
+  "cracl":"Crack","fashed":"Facade","fashad":"Facade",
+  "borken":"Broken","ruber":"Rubber","wakk":"Wall",
+  "uneven":"Uneven","cover":"Cover","plater":"Plaster",
+  "plastes":"Plaster","plastr":"Plaster","columm":"Column","colum":"Column",
+  "corek":"Crack","covek":"Crack","cocek":"Crack","coack":"Crack",
+  "parting":"Parking","parkin":"Parking","sto":"Structure","str":"Structure"
+};
+const LOWER_WORDS = new Set(['and','to','the','of','in','at','for','near','from','on','by','with']);
+const COMPASS_FIX = [
+  [/\bnorth\s*west\b/gi,'North West'],[/\bnorth\s*east\b/gi,'North East'],
+  [/\bsouth\s*west\b/gi,'South West'],[/\bsouth\s*east\b/gi,'South East'],
+  [/\bnorthwest\b/gi,'North West'],[/\bnortheast\b/gi,'North East'],
+  [/\bsouthwest\b/gi,'South West'],[/\bsoutheast\b/gi,'South East'],
+];
+
+function smartTitleCase(raw){
+  if(!raw) return '';
+  let t = String(raw).trim().replace(/\s+/g,' ');
+  COMPASS_FIX.forEach(([re,v])=>t=t.replace(re,v));
+  const parts = t.split(' ');
+  const out = parts.map((w,i)=>{
+    const clean = w.toLowerCase().replace(/[^a-z]/g,'');
+    if(SPELL_MAP[clean]) return SPELL_MAP[clean];
+    if(/^(ac|ahu|rpn|id|uae|pajv|mlcc|n\/a)$/i.test(w)) return w.toUpperCase();
+    if(i>0 && LOWER_WORDS.has(clean)) return clean;
+    if(/^\d/.test(w)) return w;
+    return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();
+  });
+  return out.join(' ');
+}
+
+function isDefect(c){ return c && c!=='N/A' && c.trim()!==''; }
+
+/* ── INDEXEDDB ─────────────────────────────────────────────── */
+const DB_NAME='pcs_survey_db_v5', DB_VER=1;
+let db=null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded = e=>{
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('buildings')) d.createObjectStore('buildings',{keyPath:'id'});
+      if(!d.objectStoreNames.contains('entries')){
+        const s = d.createObjectStore('entries',{keyPath:'id'});
+        s.createIndex('byBuilding','buildingId',{unique:false});
+      }
+      if(!d.objectStoreNames.contains('photos')) d.createObjectStore('photos',{keyPath:'entryId'});
+    };
+    req.onsuccess = e=>{db=e.target.result;res(db)};
+    req.onerror = e=>rej(e);
+  });
+}
+function tx(store,mode='readonly'){ return db.transaction(store,mode).objectStore(store); }
+function idbGetAll(store){ return new Promise((r,j)=>{const req=tx(store).getAll();req.onsuccess=()=>r(req.result);req.onerror=()=>j(req.error);}); }
+function idbPut(store,val){ return new Promise((r,j)=>{const req=tx(store,'readwrite').put(val);req.onsuccess=()=>r(val);req.onerror=()=>j(req.error);}); }
+function idbGet(store,key){ return new Promise((r,j)=>{const req=tx(store).get(key);req.onsuccess=()=>r(req.result);req.onerror=()=>j(req.error);}); }
+function idbDel(store,key){ return new Promise((r,j)=>{const req=tx(store,'readwrite').delete(key);req.onsuccess=()=>r();req.onerror=()=>j(req.error);}); }
+function idbGetByIdx(store,idxName,val){ return new Promise((r,j)=>{const req=tx(store).index(idxName).getAll(val);req.onsuccess=()=>r(req.result);req.onerror=()=>j(req.error);}); }
+function idbClear(store){ return new Promise((r,j)=>{const req=tx(store,'readwrite').clear();req.onsuccess=()=>r();req.onerror=()=>j(req.error);}); }
+
+/* ── UI HELPERS ────────────────────────────────────────────── */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function toast(msg, kind=''){
+  const t = $('#toast'); t.textContent=msg; t.className='toast show '+kind;
+  setTimeout(()=>t.className='toast '+kind,2400);
+}
+
+function openModal(html){ $('#modalBox').innerHTML=html; $('#modalBg').classList.add('show'); }
+function closeModal(){ $('#modalBg').classList.remove('show'); }
+$('#modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+function switchTab(name){
+  $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  ['info','external','capture','list','buildings','export'].forEach(n=>{
+    const el = $('#tab'+n.charAt(0).toUpperCase()+n.slice(1));
+    if(el) el.classList.toggle('hidden', n!==name);
+  });
+  $('#submitBar').style.display = (name==='capture') ? 'flex' : 'none';
+  if(name==='list') renderEntries();
+  if(name==='buildings') renderBuildings();
+  if(name==='export') renderExportSummary();
+  window.scrollTo(0,0);
+}
+$$('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+/* ── BUILDINGS ─────────────────────────────────────────────── */
+async function loadBuildings(){
+  S.buildings = await idbGetAll('buildings');
+  S.buildings.sort((a,b)=>a.createdAt-b.createdAt);
+  if(!S.currentBuildingId && S.buildings.length) S.currentBuildingId = S.buildings[0].id;
+  updateTopbar();
+  $('#cntBuildings').textContent = S.buildings.length;
+}
+
+function updateTopbar(){
+  const titleEl = $('#projectTitle');
+  if(titleEl) titleEl.textContent = 'PCS Survey ALT — BUILDING';
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  $('#buildingSub').textContent = b ? `${b.name}${b.structureType ? ' · ' + b.structureType : ''}` : '';
+  updatePhotoHint();
+}
+function updatePhotoHint(){
+  const el = $('#photoCardHint');
+  if(el) el.textContent = '1:1 square · full quality' + (S.stampDisabled?' · no stamp':' · stamped');
+}
+
+async function createBuilding(data){
+  const b = {
+    id:'bld_'+Date.now(),
+    name:data.name, code:data.code||'', structureType:data.structureType||'',
+    location:data.location||'', owner:data.owner||'', contact:data.contact||'',
+    nextPhotoId: parseInt(data.startId||1,10),
+    createdAt:Date.now()
+  };
+  await idbPut('buildings',b);
+  S.currentBuildingId = b.id;
+  await loadBuildings();
+  await loadEntries();
+  toast('Building created','success');
+}
+
+function promptNewBuilding(existing){
+  const e = existing || {};
+  openModal(`
+    <h2>${existing?'Edit':'New'} building</h2>
+    <label>Building name *</label>
+    <input type="text" id="mb_name" value="${e.name||''}" placeholder="e.g. Villa-34">
+    <label>Building code</label>
+    <input type="text" id="mb_code" value="${e.code||''}" placeholder="e.g. Str-09 / B-127">
+    <label>Structure type</label>
+    <input type="text" id="mb_struct" value="${e.structureType||''}" placeholder="e.g. G+3 Residential">
+    <label>Location / area</label>
+    <input type="text" id="mb_loc" value="${e.location||''}" placeholder="e.g. Al Rashidiya">
+    <div class="row">
+      <div><label>Owner</label><input type="text" id="mb_owner" value="${e.owner||''}" placeholder="Owner name"></div>
+      <div><label>Owner Contact</label><input type="text" id="mb_contact" value="${e.contact||''}" placeholder="Phone / email"></div>
+    </div>
+    <div class="row">
+      <div><label>Watchman</label><input type="text" id="mb_watchman" value="${e.watchman||''}" placeholder="Watchman name"></div>
+      <div><label>Watchman Contact</label><input type="text" id="mb_watchman_contact" value="${e.watchman_contact||''}" placeholder="Phone"></div>
+    </div>
+    <div class="row">
+      <div><label>Manager</label><input type="text" id="mb_manager" value="${e.manager||''}" placeholder="Manager name"></div>
+      <div><label>Manager Contact</label><input type="text" id="mb_manager_contact" value="${e.manager_contact||''}" placeholder="Phone"></div>
+    </div>
+    <label>Starting Photo ID</label>
+    <input type="number" id="mb_start" value="${e.nextPhotoId||1}" min="1">
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Cancel</button>
+      <button class="go" id="mb_save">${existing?'Save':'Create'}</button>
+    </div>
+  `);
+  $('#mb_save').onclick = async ()=>{
+    const name = $('#mb_name').value.trim();
+    if(!name){ toast('Name is required','error'); return; }
+    const data = {
+      name, code:$('#mb_code').value.trim(),
+      structureType:$('#mb_struct').value.trim(),
+      location:$('#mb_loc').value.trim(),
+      owner:$('#mb_owner').value.trim(),
+      contact:$('#mb_contact').value.trim(),
+      watchman:$('#mb_watchman').value.trim(),
+      watchman_contact:$('#mb_watchman_contact').value.trim(),
+      manager:$('#mb_manager').value.trim(),
+      manager_contact:$('#mb_manager_contact').value.trim(),
+      startId: $('#mb_start').value
+    };
+    if(existing){
+      Object.assign(existing,data,{nextPhotoId:parseInt(data.startId,10)||existing.nextPhotoId});
+      await idbPut('buildings',existing);
+      await loadBuildings();
+    } else {
+      await createBuilding(data);
+    }
+    closeModal();
+    switchTab('capture');
+    await refreshFromBuilding();
+  };
+}
+
+async function selectBuilding(id){
+  S.currentBuildingId = id;
+  updateTopbar();
+  await loadEntries();
+  await refreshFromBuilding();
+  renderBuildings();
+  toast('Switched building');
+}
+
+async function deleteBuilding(id){
+  const b = S.buildings.find(x=>x.id===id);
+  if(!b) return;
+  openModal(`
+    <h2>Delete building?</h2>
+    <p style="color:var(--g4);font-size:13.5px;line-height:1.5">
+      <strong>${b.name}</strong> and all entries/photos will be permanently deleted.
+    </p>
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Cancel</button>
+      <button class="danger" id="confirmDel">Delete</button>
+    </div>
+  `);
+  $('#confirmDel').onclick = async ()=>{
+    const ents = await idbGetByIdx('entries','byBuilding',id);
+    for(const e of ents){ await idbDel('entries',e.id); await idbDel('photos',e.id); }
+    await idbDel('buildings',id);
+    if(S.currentBuildingId===id) S.currentBuildingId=null;
+    await loadBuildings();
+    if(!S.currentBuildingId && S.buildings[0]) S.currentBuildingId=S.buildings[0].id;
+    await loadEntries();
+    await refreshFromBuilding();
+    renderBuildings();
+    closeModal();
+    toast('Building deleted','success');
+  };
+}
+
+function renderBuildings(){
+  const list = $('#buildingList');
+  if(!S.buildings.length){
+    list.innerHTML=''; $('#emptyBlds').classList.remove('hidden'); return;
+  }
+  $('#emptyBlds').classList.add('hidden');
+  list.innerHTML = S.buildings.map(b=>`
+    <div class="bld-card ${b.id===S.currentBuildingId?'active':''}" data-id="${b.id}">
+      <div class="name">${escapeHtml(b.name)}</div>
+      <div class="meta">
+        ${b.code?`<span>🏷 ${escapeHtml(b.code)}</span>`:''}
+        ${b.structureType?`<span>🏗 ${escapeHtml(b.structureType)}</span>`:''}
+        ${b.location?`<span>📍 ${escapeHtml(b.location)}</span>`:''}
+        ${b.watchman?`<span>👁 ${escapeHtml(b.watchman)}</span>`:''}
+        ${b.manager?`<span>👤 ${escapeHtml(b.manager)}</span>`:''}
+        <span>➡ next ID ${b.nextPhotoId}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="iconbtn" style="background:var(--navy);flex:1;height:34px;font-size:12px;font-weight:600" data-act="select">Select</button>
+        <button class="iconbtn" style="background:var(--g2);color:var(--g4);height:34px;font-size:14px" data-act="edit">✎</button>
+        <button class="iconbtn" style="background:#FFE8E8;color:var(--red);height:34px;font-size:14px" data-act="del">🗑</button>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.bld-card').forEach(card=>{
+    const id = card.dataset.id;
+    card.querySelector('[data-act="select"]').onclick = ()=>selectBuilding(id);
+    card.querySelector('[data-act="edit"]').onclick = ()=>promptNewBuilding(S.buildings.find(b=>b.id===id));
+    card.querySelector('[data-act="del"]').onclick = ()=>deleteBuilding(id);
+  });
+}
+$('#btnAddBld').onclick = ()=>promptNewBuilding();
+
+/* ── ENTRIES ───────────────────────────────────────────────── */
+async function loadEntries(){
+  if(!S.currentBuildingId){ S.entries=[]; $('#cntEntries').textContent=0; return; }
+  S.entries = await idbGetByIdx('entries','byBuilding',S.currentBuildingId);
+  S.entries.sort((a,b)=>a.photoId-b.photoId);
+  $('#cntEntries').textContent = S.entries.length;
+}
+
+async function refreshFromBuilding(){
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  if(b) $('#photoId').value = b.nextPhotoId;
+}
+
+function composeLocation(direction, suffix){
+  if(!direction) return '';
+  return (direction+' '+(suffix||'')).trim().replace(/\s+/g,' ');
+}
+
+async function saveEntry(){
+  if(!S.currentBuildingId){ toast('Create a building first','error'); switchTab('buildings'); return; }
+  if(!S.photoBlob){ toast('Capture a photo first','error'); return; }
+  if(!S.direction){ toast('Pick a direction','error'); return; }
+  const desc = smartTitleCase($('#descInput').value);
+  if(!desc){ toast('Add a description','error'); return; }
+
+  const photoId = parseInt($('#photoId').value,10)||1;
+  const suffix = $('#sideSuffix').value;
+  const condition = buildFinalCondition();
+  const remarks = smartTitleCase($('#remarksInput').value);
+
+  const entry = {
+    id:'ent_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    buildingId: S.currentBuildingId,
+    photoId, location: composeLocation(S.direction,suffix),
+    direction: S.direction, suffix,
+    description: desc, condition, remarks,
+    createdAt: Date.now(),
+    photoW: S.photoMeta?.w, photoH: S.photoMeta?.h,
+    photoSize: S.photoMeta?.size,
+    scalePhoto: S.scaleMode,
+  };
+  await idbPut('entries',entry);
+  await idbPut('photos',{entryId:entry.id, blob:S.photoBlob});
+
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  if(b){ b.nextPhotoId = Math.max(b.nextPhotoId, photoId+1); await idbPut('buildings',b); }
+
+  await loadEntries();
+  await refreshFromBuilding();
+  resetFormKeepSome();
+  toast(`Saved #${photoId} · ${condition==='N/A'?'View':'DEFECT'}`,'success');
+}
+
+function resetFormKeepSome(){
+  S.photoBlob = null; S.photoMeta = null; S.scaleMode = false;
+  stopCamera();
+  $('#camPreview').classList.add('hidden');
+  $('#camPlaceholder').classList.remove('hidden');
+  $('#photoInfo').innerHTML='<span>No photo</span><span></span>';
+  $('#descInput').value='';
+  $('#remarksInput').value='';
+  $('#conditionSelect').value='N/A';
+  $('#crackWidthSelect').value='';
+  updateDegreeBadge();
+  $('#btnCapture').textContent='📸 Capture';
+  $('#btnScale').style.background='';
+}
+
+function resetFormAll(){
+  resetFormKeepSome();
+  S.direction='';
+  $$('.dir-btn').forEach(b=>b.classList.remove('active'));
+  $('#sideSuffix').value='Side';
+  $('#compassLabel').textContent='Use Compass';
+  $('#compassBtn').classList.remove('active');
+}
+
+async function renderEntries(){
+  await loadEntries();
+  const list = $('#entryList');
+  if(!S.entries.length){
+    list.innerHTML=''; $('#emptyList').classList.remove('hidden'); return;
+  }
+  $('#emptyList').classList.add('hidden');
+  list.innerHTML = S.entries.map(e=>`
+    <div class="entry ${isDefect(e.condition)?'defect':''}" data-id="${e.id}">
+      <img class="thumb" data-lazy="${e.id}" alt="">
+      <div class="body">
+        <div class="pid">PHOTO #${e.photoId}${e.scalePhoto?' 📏':''}</div>
+        <div class="loc">${escapeHtml(e.location)}</div>
+        <div class="desc">${escapeHtml(e.description)}</div>
+        <span class="cond">${escapeHtml(e.condition)}</span>
+      </div>
+      <div class="act">
+        <button class="del" data-act="del">🗑</button>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('img[data-lazy]').forEach(async img=>{
+    const p = await idbGet('photos',img.dataset.lazy);
+    if(p && p.blob){ img.src = URL.createObjectURL(p.blob); }
+  });
+  list.querySelectorAll('.entry').forEach(el=>{
+    el.querySelector('[data-act="del"]').onclick = async ()=>{
+      const id = el.dataset.id;
+      await idbDel('entries',id); await idbDel('photos',id);
+      await loadEntries(); renderEntries();
+      toast('Entry deleted');
+    };
+  });
+}
+
+/* ── CAMERA ────────────────────────────────────────────────── */
+function stopCamera(){ S.stream = null; }
+
+$('#btnCapture').onclick = ()=>{
+  S.scaleMode = false;
+  const fi = $('#fileInput'); fi.value=''; fi.click();
+};
+$('#fileInput').onchange = e=>{ if(e.target.files[0]) processGalleryFile(e.target.files[0]); };
+
+$('#btnGallery').onclick = ()=>{
+  S.scaleMode = false;
+  const gi = $('#galleryInput'); gi.value=''; gi.click();
+};
+$('#galleryInput').onchange = e=>{ if(e.target.files[0]) processGalleryFile(e.target.files[0]); };
+
+// Scale button — opens camera and auto-fills description
+$('#btnScale').onclick = ()=>{
+  S.scaleMode = true;
+  $('#descInput').value = 'Crack Zoom View';
+  const si = $('#scaleInput'); si.value=''; si.click();
+  toast('📏 Scale mode — description set to "Crack Zoom View"');
+};
+$('#scaleInput').onchange = e=>{ if(e.target.files[0]) processGalleryFile(e.target.files[0]); };
+
+/* ── DATE/TIME STAMP ───────────────────────────────────────── */
+function formatStampDate(d){
+  const dd=String(d.getDate()).padStart(2,'0');
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const yy=d.getFullYear();
+  const hh=String(d.getHours()).padStart(2,'0');
+  const mi=String(d.getMinutes()).padStart(2,'0');
+  return `${dd}.${mm}.${yy}  ${hh}:${mi}`;
+}
+
+function stampDateTime(ctx, W, H, date){
+  if(S.stampDisabled) return;
+  const text = formatStampDate(date);
+  const textPx = Math.max(14, Math.round(H * 0.0313));
+  ctx.font = `bold ${textPx}px "Arial Black", Arial, sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  const metrics = ctx.measureText(text);
+  const textW = Math.ceil(metrics.width);
+  const rightMargin = Math.round(W * 0.0485);
+  const bottomMargin = Math.round(H * 0.0913);
+  const x = W - rightMargin - textW;
+  const y = H - bottomMargin;
+  const shadowOffset = Math.max(1, Math.round(textPx * 0.06));
+  const boldThickness = 2;
+  ctx.fillStyle = 'rgb(0,0,0)';
+  for(let dx=-boldThickness;dx<=boldThickness;dx++){
+    for(let dy=-boldThickness;dy<=boldThickness;dy++){
+      ctx.fillText(text, x+dx+shadowOffset, y+dy+shadowOffset);
+    }
+  }
+  ctx.fillStyle = 'rgb(236,101,17)';
+  for(let dx=-boldThickness;dx<=boldThickness;dx++){
+    for(let dy=-boldThickness;dy<=boldThickness;dy++){
+      ctx.fillText(text, x+dx, y+dy);
+    }
+  }
+  ctx.fillText(text, x, y);
+}
+
+function setPhoto(blob, w, h){
+  S.photoBlob = blob;
+  S.photoMeta = {w,h,size:blob.size};
+  const img = $('#camPreview');
+  img.src = URL.createObjectURL(blob);
+  img.classList.remove('hidden');
+  $('#camPlaceholder').classList.add('hidden');
+  $('#photoInfo').innerHTML =
+    `<span>${w}×${h} px</span><span>${(blob.size/1024/1024).toFixed(2)} MB${S.stampDisabled?'':' · stamped'}${S.scaleMode?' · 📏 Scale':''}</span>`;
+  $('#btnCapture').textContent = '🔄 Retake';
+}
+
+async function processGalleryFile(file){
+  const img = new Image();
+  img.onload = ()=>{
+    const size = Math.min(img.naturalWidth, img.naturalHeight);
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d');
+    const sx = (img.naturalWidth-size)/2;
+    const sy = (img.naturalHeight-size)/2;
+    ctx.drawImage(img, sx,sy,size,size, 0,0,size,size);
+    const stampDate = file.lastModified ? new Date(file.lastModified) : new Date();
+    stampDateTime(ctx, size, size, stampDate);
+    c.toBlob(blob=>setPhoto(blob,size,size),'image/jpeg',0.95);
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+/* ── DIRECTION / COMPASS ───────────────────────────────────── */
+$$('.dir-btn[data-dir]').forEach(b=>{
+  b.onclick = ()=>{
+    $$('.dir-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    S.direction = b.dataset.dir;
+  };
+});
+
+function headingToDir(h){
+  const dirs = ['North','North East','East','South East','South','South West','West','North West'];
+  const idx = Math.round(((h%360)/45))%8;
+  return dirs[idx];
+}
+
+$('#compassBtn').onclick = async ()=>{
+  const btn = $('#compassBtn'); const lbl = $('#compassLabel');
+  if(btn.classList.contains('active')){
+    window.removeEventListener('deviceorientationabsolute',compassHandler);
+    window.removeEventListener('deviceorientation',compassHandler);
+    btn.classList.remove('active'); lbl.textContent='Use Compass';
+    return;
+  }
+  if(typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission){
+    try{
+      const res = await DeviceOrientationEvent.requestPermission();
+      if(res!=='granted'){ toast('Compass permission denied','error'); return; }
+    }catch(_){}
+  }
+  btn.classList.add('active');
+  window.addEventListener('deviceorientationabsolute',compassHandler,true);
+  window.addEventListener('deviceorientation',compassHandler,true);
+  toast('Compass on — point device');
+};
+function compassHandler(e){
+  let heading = null;
+  if(e.webkitCompassHeading !== undefined){ heading = e.webkitCompassHeading; }
+  else if(e.alpha !== null){ heading = 360 - e.alpha; }
+  if(heading==null) return;
+  const dir = headingToDir(heading);
+  $('#compassLabel').textContent = `🧭 ${dir} (${Math.round(heading)}°)`;
+  $$('.dir-btn[data-dir]').forEach(b=>b.classList.toggle('active', b.dataset.dir===dir));
+  S.direction = dir;
+}
+
+/* ── PHOTO ID STEPPERS ─────────────────────────────────────── */
+$('#pidUp').onclick = ()=>{ const i=$('#photoId'); i.value=(parseInt(i.value,10)||0)+1; };
+$('#pidDn').onclick = ()=>{ const i=$('#photoId'); i.value=Math.max(1,(parseInt(i.value,10)||2)-1); };
+
+/* ── VOICE INPUT ───────────────────────────────────────────── */
+function setupMic(btnSel, fieldSel){
+  const btn = $(btnSel), field = $(fieldSel);
+  if(!btn||!field) return;
+  btn.onclick = ()=>{
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ toast('Voice not supported on this browser','error'); return; }
+    if(S.recognition && S.currentMicField===fieldSel){ S.recognition.stop(); return; }
+    if(S.recognition){ S.recognition.stop(); }
+    const r = new SR();
+    r.lang='en-GB'; r.interimResults=true; r.continuous=false;
+    let finalText='';
+    r.onstart = ()=>{ btn.classList.add('listening'); S.recognition=r; S.currentMicField=fieldSel; };
+    r.onresult = e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t = e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalText += t;
+        else interim += t;
+      }
+      field.value = (field.value.replace(/\s*\[\.\.\.\][^[]*$/,'') +
+        finalText + (interim?` [...]${interim}`:'')).replace(/\s+/g,' ').trim();
+    };
+    r.onerror = ()=>{ btn.classList.remove('listening'); S.recognition=null; };
+    r.onend = ()=>{
+      btn.classList.remove('listening');
+      field.value = field.value.replace(/\s*\[\.\.\.\][^[]*$/,'').trim();
+      S.recognition=null; S.currentMicField=null;
+    };
+    r.start();
+  };
+}
+setupMic('#micDesc','#descInput');
+setupMic('#micRemarks','#remarksInput');
+setupMic('#micSummary','#inf_summary');
+
+/* ── CRACK WIDTH ───────────────────────────────────────────── */
+const CRACK_DEGREES = [
+  {max:0.1,  label:'Negligible', cat:0, cls:'negligible'},
+  {max:1.0,  label:'Very Slight',cat:1, cls:'very-slight'},
+  {max:5.0,  label:'Slight',     cat:2, cls:'slight'},
+  {max:15.0, label:'Moderate',   cat:3, cls:'moderate'},
+  {max:25.0, label:'Severe',     cat:4, cls:'severe'},
+  {max:9999, label:'Very Severe',cat:5, cls:'very-severe'},
+];
+
+function getCrackDegree(val){
+  for(const d of CRACK_DEGREES) if(val<=d.max) return d;
+  return CRACK_DEGREES[CRACK_DEGREES.length-1];
+}
+
+function updateDegreeBadge(){
+  const val = parseFloat($('#crackWidthSelect').value);
+  const badge = $('#degreeBadge');
+  const hint  = $('#crackWidthHint');
+  if(!val){
+    badge.textContent='No Width'; badge.className='degree-badge';
+    hint.textContent='Select a width → degree auto-assigned per Burland et al. (1977)';
+    return;
+  }
+  const d = getCrackDegree(val);
+  badge.textContent = `Cat.${d.cat} — ${d.label}`;
+  badge.className   = `degree-badge ${d.cls}`;
+  hint.textContent  = `Burland et al. (1977) · ${val}mm = Category ${d.cat} (${d.label})`;
+}
+$('#crackWidthSelect').addEventListener('change', updateDegreeBadge);
+
+function buildFinalCondition(){
+  const base = $('#conditionSelect').value;
+  const wVal = parseFloat($('#crackWidthSelect').value);
+  if(!wVal || base === 'N/A') return base;
+  const d = getCrackDegree(wVal);
+  return `${base} (Width: ${wVal}mm) - ${d.label}`;
+}
+
+/* ── SAVE / RESET ──────────────────────────────────────────── */
+$('#btnSave').onclick = saveEntry;
+$('#btnReset').onclick = ()=>{ if(confirm('Clear current form?')) resetFormAll(); };
+
+/* ── EXPORT ────────────────────────────────────────────────── */
+function pad3(n){ return String(n).padStart(3,'0'); }  // 001 to 999 per building
+
+async function buildExcelForBuilding(buildingId){
+  const b = S.buildings.find(x=>x.id===buildingId);
+  const ents = await idbGetByIdx('entries','byBuilding',buildingId);
+  ents.sort((a,b)=>a.photoId-b.photoId);
+  const wb = new ExcelJS.Workbook();
+  wb.creator='PCS Survey App'; wb.created=new Date();
+  const ws = wb.addWorksheet('Sheet1',{views:[{state:'frozen',ySplit:1}]});
+  ws.columns = [
+    {header:'Location',   key:'location',    width:28},
+    {header:'Description',key:'description', width:45},
+    {header:'Condition',  key:'condition',   width:22},
+    {header:'Photo ID',   key:'photoId',     width:12},
+    {header:'Remarks',    key:'remarks',     width:18}
+  ];
+  const hdr = ws.getRow(1);
+  hdr.height = 24;
+  hdr.eachCell(c=>{
+    c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F3864'}};
+    c.font={bold:true,color:{argb:'FFFFFFFF'},size:11};
+    c.alignment={vertical:'middle',horizontal:'center'};
+    c.border={top:{style:'thin',color:{argb:'FF1F3864'}},bottom:{style:'thin',color:{argb:'FF1F3864'}},left:{style:'thin',color:{argb:'FF1F3864'}},right:{style:'thin',color:{argb:'FF1F3864'}}};
+  });
+  ents.forEach(e=>{
+    const row = ws.addRow({
+      location:e.location,
+      description:e.description,
+      condition:e.condition,
+      photoId:e.photoId,
+      remarks:e.remarks||(b.code||'')
+    });
+    row.height = 18;
+    const def = isDefect(e.condition);
+    row.eachCell(c=>{
+      c.alignment={vertical:'middle',wrapText:true};
+      c.border={top:{style:'thin',color:{argb:'FFE8EAF0'}},bottom:{style:'thin',color:{argb:'FFE8EAF0'}},left:{style:'thin',color:{argb:'FFE8EAF0'}},right:{style:'thin',color:{argb:'FFE8EAF0'}}};
+      if(def){ c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFE4B5'}}; }
+      else    { c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDF2FF'}}; }
+    });
+    if(def){
+      const cc = row.getCell('condition');
+      cc.font = {bold:true,color:{argb:'FF7F3300'}};
+    }
+    row.getCell('photoId').alignment = {vertical:'middle',horizontal:'center'};
+  });
+  ws.autoFilter = {from:'A1',to:`E${ents.length+1}`};
+  return { wb, entries:ents, building:b };
+}
+
+/* ── WORD BUILDER ───────────────────────────────────────────
+   XML structure validated against docx npm library output.
+   All namespace declarations, sectPr placement, page break
+   syntax match exactly what Word/mobile apps require.
+   ─────────────────────────────────────────────────────────── */
+
+// 9.11cm × 6.37cm in EMU (1cm = 360000 EMU)
+const PHOTO_W_EMU = 3279600;  // 9.11 * 360000
+const PHOTO_H_EMU = 2293200;  // 6.37 * 360000
+// Same in px at 96dpi (1cm = 96/2.54 px)
+
+function xmlEscape(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function docxPicXml(relId, picNum){
+  return `<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${PHOTO_W_EMU}" cy="${PHOTO_H_EMU}"/><wp:effectExtent t="0" r="0" b="0" l="0"/><wp:docPr id="${picNum}" name="photo" descr="survey photo" title="photo"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="" descr=""/><pic:cNvPicPr><a:picLocks noChangeAspect="1" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relId}" cstate="none"/><a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"><a:xfrm><a:off x="0" y="0"/><a:ext cx="${PHOTO_W_EMU}" cy="${PHOTO_H_EMU}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>`;
+}
+
+function docxOvalXml(picNum){
+  const W = Math.round(175.3 * 12700);
+  const H = Math.round(145.9 * 12700);
+  const OFF_X = Math.round(42.6 * 12700);
+  const OFF_Y = Math.round(19.4 * 12700);
+  return `<w:r><w:rPr/><mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+<mc:Choice xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" Requires="wps">
+<w:drawing>
+<wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="${250+picNum}" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
+<wp:simplePos x="0" y="0"/>
+<wp:positionH relativeFrom="column"><wp:posOffset>${OFF_X}</wp:posOffset></wp:positionH>
+<wp:positionV relativeFrom="paragraph"><wp:posOffset>${OFF_Y}</wp:posOffset></wp:positionV>
+<wp:extent cx="${W}" cy="${H}"/>
+<wp:effectExtent l="0" t="0" r="0" b="0"/>
+<wp:wrapNone/>
+<wp:docPr id="${9000+picNum}" name="Oval ${picNum}"/>
+<wp:cNvGraphicFramePr/>
+<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+<a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+<wps:wsp>
+<wps:cNvSpPr/>
+<wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${W}" cy="${H}"/></a:xfrm>
+<a:prstGeom prst="ellipse"><a:avLst/></a:prstGeom>
+<a:noFill/>
+<a:ln w="28575"><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:ln>
+</wps:spPr>
+<wps:bodyPr/>
+</wps:wsp>
+</a:graphicData></a:graphic>
+</wp:anchor>
+</w:drawing></mc:Choice></mc:AlternateContent></w:r>`;
+}
+
+function docxCell(content, opts={}){
+  const w = opts.width || 2600;
+  const gridSpan = opts.gridSpan ? `<w:gridSpan w:val="${opts.gridSpan}"/>` : '';
+  const shd = opts.shading ? `<w:shd w:fill="${opts.shading}" w:val="clear"/>` : '';
+  const margins = `<w:tcMar><w:top w:type="dxa" w:w="80"/><w:left w:type="dxa" w:w="120"/><w:bottom w:type="dxa" w:w="80"/><w:right w:type="dxa" w:w="120"/></w:tcMar>`;
+  return `<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="${w}"/>${gridSpan}${shd}${margins}<w:vAlign w:val="center"/></w:tcPr>${content}</w:tc>`;
+}
+
+function docxPara(runs, opts={}){
+  const jc = opts.align ? `<w:jc w:val="${opts.align}"/>` : '<w:jc w:val="left"/>';
+  const pPr = `<w:pPr><w:spacing w:after="0"/>${jc}</w:pPr>`;
+  const rXml = runs.map(r=>{
+    const bold = r.bold ? '<w:b/><w:bCs/>' : '<w:b w:val="false"/><w:bCs w:val="false"/>';
+    const color = r.color ? `<w:color w:val="${r.color}"/>` : '';
+    const sz = r.size || 20;
+    const rPr = `<w:rPr><w:rFonts w:ascii="Calibri" w:cs="Calibri" w:eastAsia="Calibri" w:hAnsi="Calibri"/>${bold}${color}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/></w:rPr>`;
+    return `<w:r>${rPr}<w:t xml:space="preserve">${xmlEscape(r.text)}</w:t></w:r>`;
+  }).join('');
+  return `<w:p>${pPr}${rXml}</w:p>`;
+}
+
+function docxPicParagraph(relId, picNum, hasDefect){
+  const pPr = `<w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>`;
+  const picRun = `<w:r><w:rPr/>${docxPicXml(relId, picNum)}</w:r>`;
+  const ovalRun = hasDefect ? docxOvalXml(picNum) : '';
+  return `<w:p>${pPr}${picRun}${ovalRun}</w:p>`;
+}
+
+function buildInfoPage(b, info){
+  // ── Helpers ──────────────────────────────────────────────
+  function infoRow(label, value){
+    return '<w:tr><w:trPr><w:trHeight w:val="380" w:hRule="atLeast"/></w:trPr>'
+      + docxCell(docxPara([{text:label,bold:true,size:18,color:'1F3864'}]),{width:3800,shading:'D9E2F3'})
+      + docxCell(docxPara([{text:value||'—',size:18}]),{width:6600})
+      + '</w:tr>';
+  }
+  function sectionRow(title){
+    return '<w:tr><w:trPr><w:trHeight w:val="420" w:hRule="atLeast"/></w:trPr>'
+      + docxCell(docxPara([{text:title,bold:true,size:20,color:'FFFFFF'}],{align:'left'}),{width:10400,gridSpan:2,shading:'1F3864'})
+      + '</w:tr>';
+  }
+  const tblBorders = '<w:tblBorders>'
+    + '<w:top w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:left w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:bottom w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:right w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideH w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideV w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '</w:tblBorders>';
+  const tblPr2col = '<w:tblPr><w:tblW w:w="10400" w:type="dxa"/>' + tblBorders + '</w:tblPr>';
+  const tblGrid2col = '<w:tblGrid><w:gridCol w:w="3800"/><w:gridCol w:w="6600"/></w:tblGrid>';
+
+  // ── PURPOSE paragraph ────────────────────────────────────
+  const purposeHeading = docxPara([{text:'1. PURPOSE',bold:true,size:24,color:'1F3864'}]);
+  const purposeText = '<w:p><w:pPr><w:spacing w:after="160"/></w:pPr>'
+    + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
+    + '<w:t xml:space="preserve">A condition survey shall be undertaken on structures located within the zone of influence of tunnels of the '
+    + xmlEscape(info.project||'the Project')
+    + ' before and after the construction activities. This document comprises of pre-construction condition survey of building ('
+    + xmlEscape((info.bid||'') + (info.bname ? ' — ' + info.bname : ''))
+    + ') located within the zone of influence of the project.</w:t></w:r></w:p>';
+
+  // ── GENERAL INFORMATION table ────────────────────────────
+  const genHeading = docxPara([{text:'2. GENERAL INFORMATION',bold:true,size:24,color:'1F3864'}]);
+  let rows = '';
+  rows += infoRow('Project Name',               info.project);
+  rows += infoRow('Client',                     info.client);
+  rows += infoRow('Consultant',                 info.consultant);
+  rows += infoRow('Contractor',                 info.contractor);
+  rows += infoRow('Service Provider',           info.service);
+  rows += infoRow('Building ID',                info.bid);
+  rows += infoRow('Building Name',              info.bname || b.name);
+  rows += infoRow('Makani Number',              info.makani);
+  rows += infoRow('Plot Number',                info.plot);
+  rows += infoRow('Name & Signature of Surveyor', info.surveyor);
+  rows += infoRow('Name & Signature of PAJV & MLCC Rep', info.rep);
+  rows += infoRow('Survey Date',                info.date);
+  rows += infoRow('No. of Levels (incl. GF & Roof)', info.levels);
+  rows += infoRow('No. of Basements',           info.basements);
+  rows += infoRow('Type of Building',           info.type);
+  rows += infoRow('Distance from Alignment',    info.distance);
+  rows += infoRow('Address',                    info.address);
+  rows += infoRow('Age of Building',            info.age);
+  rows += infoRow('Dimension of Building',      info.dim);
+  rows += infoRow('Foundation Type',            info.foundation);
+  rows += infoRow('Structure Form',             info.structure);
+  const genTbl = '<w:tbl>' + tblPr2col + tblGrid2col + rows + '</w:tbl>';
+
+  // ── SUMMARY box ──────────────────────────────────────────
+  const summaryHeading = docxPara([{text:'Summary / Comments:',bold:true,size:20,color:'1F3864'}]);
+  const summaryTblPr = '<w:tblPr><w:tblW w:w="10400" w:type="dxa"/>' + tblBorders + '</w:tblPr>';
+  const summaryTblGrid = '<w:tblGrid><w:gridCol w:w="10400"/></w:tblGrid>';
+  const summaryRow = '<w:tr><w:trPr><w:trHeight w:val="400" w:hRule="atLeast"/></w:trPr>'
+    + '<w:tc><w:tcPr><w:tcW w:w="10400" w:type="dxa"/>'
+    + '<w:tcMar><w:top w:type="dxa" w:w="100"/><w:left w:type="dxa" w:w="140"/><w:bottom w:type="dxa" w:w="100"/><w:right w:type="dxa" w:w="140"/></w:tcMar>'
+    + '</w:tcPr>'
+    + '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr>'
+    + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
+    + '<w:t xml:space="preserve">' + xmlEscape(info.summary||'No summary provided.') + '</w:t></w:r>'
+    + '</w:p></w:tc></w:tr>';
+  const summaryTbl = '<w:tbl>' + summaryTblPr + summaryTblGrid + summaryRow + '</w:tbl>';
+
+  return purposeHeading
+    + '<w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>'
+    + purposeText
+    + '<w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>'
+    + genHeading
+    + '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>'
+    + genTbl
+    + '<w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>'
+    + summaryHeading
+    + '<w:p><w:pPr><w:spacing w:after="40"/></w:pPr></w:p>'
+    + summaryTbl;
+}
+
+function buildReferencesPage(){
+  // ── REFERENCES — Burland 1977 damage classification ──────
+  const heading = docxPara([{text:'3. REFERENCES',bold:true,size:24,color:'1F3864'}]);
+  const subheading = docxPara([{text:'Damage Classification — Structural Damage Classification after Burland et al. 1977 and Boscardin & Cording, 1989',bold:true,size:18,color:'1F3864'}]);
+
+  const tblBorders = '<w:tblBorders>'
+    + '<w:top w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:left w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:bottom w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:right w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideH w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideV w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '</w:tblBorders>';
+
+  // 5 columns: Cat(900) | Degree(1500) | Description(5000) | Crack Width(1700) | Tensile Strain(1300)
+  const tblPr = '<w:tblPr><w:tblW w:w="10400" w:type="dxa"/>' + tblBorders + '</w:tblPr>';
+  const tblGrid = '<w:tblGrid><w:gridCol w:w="900"/><w:gridCol w:w="1500"/><w:gridCol w:w="5000"/><w:gridCol w:w="1700"/><w:gridCol w:w="1300"/></w:tblGrid>';
+
+  function hdrCell(text, width){
+    return '<w:tc><w:tcPr><w:tcW w:w="' + width + '" w:type="dxa"/>'
+      + '<w:shd w:fill="1F3864" w:val="clear"/>'
+      + '<w:tcMar><w:top w:type="dxa" w:w="80"/><w:left w:type="dxa" w:w="100"/><w:bottom w:type="dxa" w:w="80"/><w:right w:type="dxa" w:w="100"/></w:tcMar>'
+      + '<w:vAlign w:val="center"/></w:tcPr>'
+      + '<w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'
+      + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:b/><w:bCs/><w:color w:val="FFFFFF"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>'
+      + '<w:t xml:space="preserve">' + xmlEscape(text) + '</w:t></w:r></w:p></w:tc>';
+  }
+  function dataCell(text, width, bold, color, align){
+    const b = bold ? '<w:b/><w:bCs/>' : '';
+    const c = color ? '<w:color w:val="' + color + '"/>' : '';
+    const jc = align ? '<w:jc w:val="' + align + '"/>' : '<w:jc w:val="center"/>';
+    return '<w:tc><w:tcPr><w:tcW w:w="' + width + '" w:type="dxa"/>'
+      + '<w:tcMar><w:top w:type="dxa" w:w="80"/><w:left w:type="dxa" w:w="100"/><w:bottom w:type="dxa" w:w="80"/><w:right w:type="dxa" w:w="100"/></w:tcMar>'
+      + '<w:vAlign w:val="center"/></w:tcPr>'
+      + '<w:p><w:pPr><w:spacing w:after="0"/>' + jc + '</w:pPr>'
+      + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>' + b + c + '<w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>'
+      + '<w:t xml:space="preserve">' + xmlEscape(text) + '</w:t></w:r></w:p></w:tc>';
+  }
+
+  const hdrRow = '<w:tr><w:trPr><w:trHeight w:val="400" w:hRule="atLeast"/></w:trPr>'
+    + hdrCell('Damage\nCategory', 900)
+    + hdrCell('Degree of\nDamage', 1500)
+    + hdrCell('Description of Typical Damage', 5000)
+    + hdrCell('Crack Width\n(mm)', 1700)
+    + hdrCell('Max. Tensile\nStrain (%)', 1300)
+    + '</w:tr>';
+
+  const rows = [
+    ['0','Negligible','Hairline cracks','< 0.1','0 to 0.05'],
+    ['1','Very Slight','Fine cracks easily treated during normal redecorations. Perhaps isolated slight fracture in building. Cracks in exterior brickwork visible upon close inspection.','0.1 to 1','0.05 to 0.075'],
+    ['2','Slight','Cracks easily filled. Redecoration probably required. Several slight fractures in building. Exterior cracks visible; some re-pointing may be required. Doors and windows may stick slightly.','1 to 5','0.075 to 0.15'],
+    ['3','Moderate','Cracks may require cutting out and patching. Doors and windows may stick slightly. Utility services may be interrupted. Water tightness often impaired.','5 to 15','0.15 to 0.30'],
+    ['4','Severe','Extensive repair involving removal and replacement of sections of walls. Windows and door frames distorted. Floor slopes noticeably. Walls lean or bulge noticeably.','15 to 25','> 0.30'],
+    ['5','Very Severe','Major repair required involving partial or complete reconstruction. Beams lose bearing, walls lean badly and require shoring. Danger of instability.','> 25','—'],
+  ];
+
+  const rowColors = ['','','','','',''];
+  let dataRows = '';
+  rows.forEach((r, i) => {
+    const shade = i % 2 === 0 ? '' : 'EDF2FF';
+    function shadeCell(text, width, bold, color, align){
+      const b2 = bold ? '<w:b/><w:bCs/>' : '';
+      const c2 = color ? '<w:color w:val="' + color + '"/>' : '';
+      const jc2 = align ? '<w:jc w:val="' + align + '"/>' : '<w:jc w:val="center"/>';
+      const sh = shade ? '<w:shd w:fill="' + shade + '" w:val="clear"/>' : '';
+      return '<w:tc><w:tcPr><w:tcW w:w="' + width + '" w:type="dxa"/>' + sh
+        + '<w:tcMar><w:top w:type="dxa" w:w="80"/><w:left w:type="dxa" w:w="100"/><w:bottom w:type="dxa" w:w="80"/><w:right w:type="dxa" w:w="100"/></w:tcMar>'
+        + '<w:vAlign w:val="center"/></w:tcPr>'
+        + '<w:p><w:pPr><w:spacing w:after="0"/>' + jc2 + '</w:pPr>'
+        + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>' + b2 + c2 + '<w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>'
+        + '<w:t xml:space="preserve">' + xmlEscape(text) + '</w:t></w:r></w:p></w:tc>';
+    }
+    dataRows += '<w:tr><w:trPr><w:trHeight w:val="300" w:hRule="atLeast"/></w:trPr>'
+      + shadeCell(r[0], 900, true, '1F3864', 'center')
+      + shadeCell(r[1], 1500, true, null, 'center')
+      + shadeCell(r[2], 5000, false, null, 'left')
+      + shadeCell(r[3], 1700, true, 'C8510A', 'center')
+      + shadeCell(r[4], 1300, false, null, 'center')
+      + '</w:tr>';
+  });
+
+  const tbl = '<w:tbl>' + tblPr + tblGrid + hdrRow + dataRows + '</w:tbl>';
+
+  const notes = '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr>'
+    + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:i/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>'
+    + '<w:t xml:space="preserve">References: Boscardin M.D. and Cording E.J. (1989); Burland J.B., Broms B.B., and de Mello V.F.B. (1977)</w:t></w:r></w:p>';
+
+  return heading
+    + '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>'
+    + subheading
+    + '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>'
+    + tbl
+    + '<w:p><w:pPr><w:spacing w:after="40"/></w:pPr></w:p>'
+    + notes;
+}
+
+function buildLocationPage(info){
+  // ── LOCATION MAP page ────────────────────────────────────
+  const heading = docxPara([{text:'5. LOCATION MAP',bold:true,size:24,color:'1F3864'}]);
+
+  const tblBorders = '<w:tblBorders>'
+    + '<w:top w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:left w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:bottom w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:right w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideH w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideV w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '</w:tblBorders>';
+
+  function infoRow2(label, value){
+    return '<w:tr><w:trPr><w:trHeight w:val="380" w:hRule="atLeast"/></w:trPr>'
+      + '<w:tc><w:tcPr><w:tcW w:w="3800" w:type="dxa"/>'
+      + '<w:shd w:fill="D9E2F3" w:val="clear"/>'
+      + '<w:tcMar><w:top w:type="dxa" w:w="80"/><w:left w:type="dxa" w:w="140"/><w:bottom w:type="dxa" w:w="80"/><w:right w:type="dxa" w:w="140"/></w:tcMar>'
+      + '<w:vAlign w:val="center"/></w:tcPr>'
+      + '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr>'
+      + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:b/><w:bCs/><w:color w:val="1F3864"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
+      + '<w:t xml:space="preserve">' + xmlEscape(label) + '</w:t></w:r></w:p></w:tc>'
+      + '<w:tc><w:tcPr><w:tcW w:w="6600" w:type="dxa"/>'
+      + '<w:tcMar><w:top w:type="dxa" w:w="80"/><w:left w:type="dxa" w:w="140"/><w:bottom w:type="dxa" w:w="80"/><w:right w:type="dxa" w:w="140"/></w:tcMar>'
+      + '<w:vAlign w:val="center"/></w:tcPr>'
+      + '<w:p><w:pPr><w:spacing w:after="0"/></w:pPr>'
+      + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
+      + '<w:t xml:space="preserve">' + xmlEscape(value||'—') + '</w:t></w:r></w:p></w:tc>'
+      + '</w:tr>';
+  }
+
+  const coordTblPr = '<w:tblPr><w:tblW w:w="10400" w:type="dxa"/>' + tblBorders + '</w:tblPr>';
+  const coordTblGrid = '<w:tblGrid><w:gridCol w:w="3800"/><w:gridCol w:w="6600"/></w:tblGrid>';
+  let coordRows = '';
+  coordRows += infoRow2('Building ID',            info.bid);
+  coordRows += infoRow2('Building Name',          info.bname);
+  coordRows += infoRow2('Address',                info.address);
+  coordRows += infoRow2('Building Coordinate — Latitude',  (info.lat ? info.lat + '°' : '—'));
+  coordRows += infoRow2('Building Coordinate — Longitude', (info.lng ? info.lng + '°' : '—'));
+  const coordTbl = '<w:tbl>' + coordTblPr + coordTblGrid + coordRows + '</w:tbl>';
+
+  // Map note box
+  const mapNote = '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr>'
+    + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
+    + '<w:t xml:space="preserve">Map link: https://maps.google.com/?q=' + xmlEscape((info.lat||'') + ',' + (info.lng||'')) + '</w:t></w:r></w:p>';
+
+  const zoneNote = '<w:p><w:pPr><w:spacing w:after="40"/></w:pPr>'
+    + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:b/><w:bCs/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
+    + '<w:t xml:space="preserve">Tunnel Alignment Centre Line / Zone of Influence @30m</w:t></w:r></w:p>';
+
+  return heading
+    + '<w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>'
+    + coordTbl
+    + '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>'
+    + mapNote
+    + zoneNote;
+}
+
+function buildExternalViewsPage(extSlots, extRelIds){
+  // ── EXTERNAL VIEWS page — 4 or 6 slots ──────────────────
+  const heading = docxPara([{text:'7. BUILDING\'S EXTERNAL VIEWS',bold:true,size:24,color:'1F3864'}]);
+
+  const tblBorders = '<w:tblBorders>'
+    + '<w:top w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:left w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:bottom w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:right w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideH w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '<w:insideV w:val="single" w:color="1F3864" w:sz="4"/>'
+    + '</w:tblBorders>';
+  const tblPr = '<w:tblPr><w:tblW w:w="10400" w:type="dxa"/>' + tblBorders + '</w:tblPr>';
+  const tblGrid = '<w:tblGrid><w:gridCol w:w="5200"/><w:gridCol w:w="5200"/></w:tblGrid>';
+
+  const filled = extSlots.filter((s,i) => s && (extRelIds[i]||{}).relId);
+  if(!filled.length){
+    return heading + '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr><w:r><w:t>No external view photos captured.</w:t></w:r></w:p>';
+  }
+
+  // Process in pairs
+  let rows = '';
+  for(let i=0; i < extSlots.length; i+=2){
+    const lS = extSlots[i],   lR = extRelIds[i]||{};
+    const rS = extSlots[i+1], rR = extRelIds[i+1]||{};
+
+    // Caption row (direction label)
+    function captionCell(slot, width){
+      const label = slot ? xmlEscape(slot.dir || ('View ' + (i+1))) : '';
+      return '<w:tc><w:tcPr><w:tcW w:w="' + width + '" w:type="dxa"/>'
+        + '<w:shd w:fill="D9E2F3" w:val="clear"/>'
+        + '<w:tcMar><w:top w:type="dxa" w:w="60"/><w:left w:type="dxa" w:w="100"/><w:bottom w:type="dxa" w:w="60"/><w:right w:type="dxa" w:w="100"/></w:tcMar>'
+        + '<w:vAlign w:val="center"/></w:tcPr>'
+        + '<w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'
+        + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:b/><w:bCs/><w:color w:val="1F3864"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>'
+        + '<w:t>' + label + ' Elevation</w:t></w:r></w:p></w:tc>';
+    }
+
+    rows += '<w:tr><w:trPr><w:trHeight w:val="340" w:hRule="atLeast"/></w:trPr>'
+      + captionCell(lS, 5200)
+      + captionCell(rS, 5200)
+      + '</w:tr>';
+
+    // Photo row
+    function photoCell(slot, relData, width){
+      if(slot && relData && relData.relId){
+        const picNum = relData.picNum;
+        const W = Math.round(4.8 * 360000);  // 4.8cm wide for ext view
+        const H = Math.round(3.6 * 360000);  // 3.6cm high
+        const picXml = '<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">'
+          + '<wp:extent cx="' + W + '" cy="' + H + '"/>'
+          + '<wp:effectExtent t="0" r="0" b="0" l="0"/>'
+          + '<wp:docPr id="' + picNum + '" name="ext_photo" descr="external view"/>'
+          + '<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>'
+          + '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+          + '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+          + '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+          + '<pic:nvPicPr><pic:cNvPr id="0" name="" descr=""/><pic:cNvPicPr><a:picLocks noChangeAspect="1" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr>'
+          + '<pic:blipFill><a:blip r:embed="' + relData.relId + '" cstate="none"/><a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+          + '<pic:spPr bwMode="auto"><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + W + '" cy="' + H + '"/></a:xfrm>'
+          + '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
+          + '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>';
+        return '<w:tc><w:tcPr><w:tcW w:w="' + width + '" w:type="dxa"/>'
+          + '<w:tcMar><w:top w:type="dxa" w:w="80"/><w:left w:type="dxa" w:w="80"/><w:bottom w:type="dxa" w:w="80"/><w:right w:type="dxa" w:w="80"/></w:tcMar>'
+          + '<w:vAlign w:val="center"/></w:tcPr>'
+          + '<w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'
+          + '<w:r><w:rPr/>' + picXml + '</w:r></w:p></w:tc>';
+      } else {
+        return '<w:tc><w:tcPr><w:tcW w:w="' + width + '" w:type="dxa"/>'
+          + '<w:shd w:fill="F2F2F2" w:val="clear"/></w:tcPr>'
+          + '<w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'
+          + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="18"/></w:rPr>'
+          + '<w:t>No Photo</w:t></w:r></w:p></w:tc>';
+      }
+    }
+    rows += '<w:tr><w:trPr><w:trHeight w:val="2800" w:hRule="exact"/></w:trPr>'
+      + photoCell(lS, lR, 5200)
+      + photoCell(rS, rR, 5200)
+      + '</w:tr>';
+
+    // Photograph ID row
+    function pidCell(slot, width){
+      const txt = slot ? xmlEscape('Photograph: ' + slot.dir) : '';
+      return '<w:tc><w:tcPr><w:tcW w:w="' + width + '" w:type="dxa"/>'
+        + '<w:tcMar><w:top w:type="dxa" w:w="60"/><w:left w:type="dxa" w:w="100"/><w:bottom w:type="dxa" w:w="60"/><w:right w:type="dxa" w:w="100"/></w:tcMar>'
+        + '<w:vAlign w:val="center"/></w:tcPr>'
+        + '<w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>'
+        + '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:b/><w:bCs/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>'
+        + '<w:t>' + txt + '</w:t></w:r></w:p></w:tc>';
+    }
+    rows += '<w:tr><w:trPr><w:trHeight w:val="300" w:hRule="atLeast"/></w:trPr>'
+      + pidCell(lS, 5200) + pidCell(rS, 5200) + '</w:tr>';
+  }
+
+  const tbl = '<w:tbl>' + tblPr + tblGrid + rows + '</w:tbl>';
+  return heading
+    + '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>'
+    + tbl;
+}
+
+function buildDocxPage(pageEntries, building, photoRelIds){
+  // compact cell for text rows — tight margins so rows stay < 0.4cm
+  function cCell(content, width){
+    const margins = '<w:tcMar><w:top w:type="dxa" w:w="40"/><w:left w:type="dxa" w:w="80"/><w:bottom w:type="dxa" w:w="40"/><w:right w:type="dxa" w:w="80"/></w:tcMar>';
+    return '<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="' + width + '"/>' + margins + '<w:vAlign w:val="center"/></w:tcPr>' + content + '</w:tc>';
+  }
+  function cPara(runs){
+    const pPr = '<w:pPr><w:spacing w:after="0" w:before="0"/></w:pPr>';
+    let rXml = '';
+    for(const r of runs){
+      const bold = r.bold ? '<w:b/><w:bCs/>' : '';
+      const color = r.color ? '<w:color w:val="' + r.color + '"/>' : '';
+      const rPr = '<w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>' + bold + color + '<w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr>';
+      rXml += '<w:r>' + rPr + '<w:t xml:space="preserve">' + xmlEscape(r.text) + '</w:t></w:r>';
+    }
+    return '<w:p>' + pPr + rXml + '</w:p>';
+  }
+  // Derive best location string from entries on this page
+  const locs = [...new Set(pageEntries.filter(Boolean).map(e=>e.location))];
+  const pageLocation = locs.join(', ') || building.location || '';
+  // Find max damage degree on this page for header
+  const degrees = pageEntries.filter(Boolean).map(e=>{
+    if(!isDefect(e.condition)) return '';
+    const m = e.condition.match(/- (Negligible|Very Slight|Slight|Moderate|Severe|Very Severe)/i);
+    return m ? m[1] : (isDefect(e.condition) ? 'Defect' : '');
+  }).filter(Boolean);
+  const damagedLevel = degrees.length ? [...new Set(degrees)].join(' / ') : 'N/A';
+
+  const headerRow1 = '<w:tr><w:trPr><w:trHeight w:val="200" w:hRule="atLeast"/></w:trPr>'
+    + docxCell(docxPara([{text:'Damage No.: ',bold:true,size:20},{text:'N/A',size:20}]),{width:5200,gridSpan:2,shading:'D9E2F3'})
+    + docxCell(docxPara([{text:'Location: ',bold:true,size:20},{text:pageLocation,size:20}]),{width:5200,gridSpan:2,shading:'D9E2F3'})
+    + '</w:tr>';
+  const headerRow2 = '<w:tr><w:trPr><w:trHeight w:val="200" w:hRule="atLeast"/></w:trPr>'
+    + docxCell(docxPara([{text:'Area.: ',bold:true,size:20},{text:'Exterior',size:20}]),{width:5200,gridSpan:2,shading:'D9E2F3'})
+    + docxCell(docxPara([{text:'Damaged Level: ',bold:true,size:20},{text:damagedLevel,size:20}]),{width:5200,gridSpan:2,shading:'D9E2F3'})
+    + '</w:tr>';
+
+  let bodyRows = '';
+  for(let block=0;block<3;block++){
+    const li=block*2, ri=block*2+1;
+    const lE=pageEntries[li], rE=pageEntries[ri];
+    const lR=photoRelIds[li], rR=photoRelIds[ri];
+    const leftPh = lE && lR && lR.relId
+      ? docxCell(docxPicParagraph(lR.relId,lR.picNum,lR.hasDefect),{width:5200,gridSpan:2})
+      : docxCell(docxPara([{text:lE?('[PHOTO '+lE.photoId+']'):'',size:20}],{align:'center'}),{width:5200,gridSpan:2,shading:'F2F2F2'});
+    const rightPh = rE && rR && rR.relId
+      ? docxCell(docxPicParagraph(rR.relId,rR.picNum,rR.hasDefect),{width:5200,gridSpan:2})
+      : docxCell(docxPara([{text:rE?('[PHOTO '+rE.photoId+']'):'',size:20}],{align:'center'}),{width:5200,gridSpan:2,shading:'F2F2F2'});
+    bodyRows += '<w:tr><w:trPr><w:trHeight w:val="3690" w:hRule="exact"/></w:trPr>' + leftPh + rightPh + '</w:tr>';
+    bodyRows += '<w:tr><w:trPr><w:trHeight w:val="220" w:hRule="atLeast"/></w:trPr>'
+      + cCell(cPara([{text:'Specific Location: ',bold:true},{text:lE?lE.description:''}]), 2600)
+      + cCell(cPara([{text:'View Direction: ',bold:true},{text:lE?lE.location:''}]), 2600)
+      + cCell(cPara([{text:'Specific Location: ',bold:true},{text:rE?rE.description:''}]), 2600)
+      + cCell(cPara([{text:'View Direction: ',bold:true},{text:rE?rE.location:''}]), 2600)
+      + '</w:tr>';
+    const lCond = lE?(isDefect(lE.condition)?lE.condition:'N/A'):'';
+    const rCond = rE?(isDefect(rE.condition)?rE.condition:'N/A'):'';
+    bodyRows += '<w:tr><w:trPr><w:trHeight w:val="220" w:hRule="atLeast"/></w:trPr>'
+      + cCell(cPara([{text:'Defect Type: ',bold:true},{text:lCond,bold:lE&&isDefect(lE.condition),color:lE&&isDefect(lE.condition)?'C00000':null}]), 2600)
+      + cCell(cPara([{text:'Picture ID: ',bold:true},{text:lE?pad3(lE.photoId):'',bold:true}]), 2600)
+      + cCell(cPara([{text:'Defect Type: ',bold:true},{text:rCond,bold:rE&&isDefect(rE.condition),color:rE&&isDefect(rE.condition)?'C00000':null}]), 2600)
+      + cCell(cPara([{text:'Picture ID: ',bold:true},{text:rE?pad3(rE.photoId):'',bold:true}]), 2600)
+      + '</w:tr>';
+  }
+  const tblPr = '<w:tblPr><w:tblW w:type="dxa" w:w="10400"/><w:tblBorders><w:top w:val="single" w:color="1F3864" w:sz="4"/><w:left w:val="single" w:color="1F3864" w:sz="4"/><w:bottom w:val="single" w:color="1F3864" w:sz="4"/><w:right w:val="single" w:color="1F3864" w:sz="4"/><w:insideH w:val="single" w:color="1F3864" w:sz="4"/><w:insideV w:val="single" w:color="1F3864" w:sz="4"/></w:tblBorders></w:tblPr>';
+  const tblGrid = '<w:tblGrid><w:gridCol w:w="2600"/><w:gridCol w:w="2600"/><w:gridCol w:w="2600"/><w:gridCol w:w="2600"/></w:tblGrid>';
+  return '<w:tbl>' + tblPr + tblGrid + headerRow1 + headerRow2 + bodyRows + '</w:tbl>';
+}
+
+
+async function buildWordForBuilding(buildingId, progressCb){
+  const b = S.buildings.find(x=>x.id===buildingId);
+  const ents = await idbGetByIdx('entries','byBuilding',buildingId);
+  ents.sort((a,b)=>a.photoId-b.photoId);
+  const zip = new JSZip();
+
+  zip.file('[Content_Types].xml',`<?xml version="1.0" encoding="utf-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default ContentType="image/jpeg" Extension="jpeg"/>
+<Default ContentType="image/jpeg" Extension="jpg"/>
+<Default ContentType="image/png" Extension="png"/>
+<Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>
+<Default ContentType="application/xml" Extension="xml"/>
+<Override ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml" PartName="/word/document.xml"/>
+<Override ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml" PartName="/word/styles.xml"/>
+<Override ContentType="application/vnd.openxmlformats-package.core-properties+xml" PartName="/docProps/core.xml"/>
+<Override ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml" PartName="/docProps/app.xml"/>
+<Override ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml" PartName="/word/settings.xml"/>
+<Override ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml" PartName="/word/footnotes.xml"/>
+<Override ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml" PartName="/word/endnotes.xml"/>
+</Types>`);
+
+  zip.file('_rels/.rels',`<?xml version="1.0" encoding="utf-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>`);
+
+  zip.file('docProps/core.xml',`<?xml version="1.0" encoding="utf-8"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dc:title>PCS Survey - ${xmlEscape(b.name)}</dc:title>
+<dc:creator>PCS Survey App</dc:creator>
+</cp:coreProperties>`);
+  zip.file('docProps/app.xml',`<?xml version="1.0" encoding="utf-8"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
+<Application>PCS Survey App</Application>
+</Properties>`);
+
+  const rels = [];
+  const mediaFiles = {};
+  for(let i=0;i<ents.length;i++){
+    const p = await idbGet('photos',ents[i].id);
+    if(p && p.blob){
+      const relId = `rId${i+10}`;
+      const fname = `img${i+1}.jpg`;
+      rels.push({relId,fname,hasDefect:isDefect(ents[i].condition),picNum:i+1});
+      mediaFiles[fname] = await p.blob.arrayBuffer();
+    } else {
+      rels.push({relId:null,fname:null,hasDefect:false,picNum:i+1});
+    }
+    if(progressCb) progressCb(Math.round((i/ents.length)*60));
+  }
+  // ── External view photos (must be done BEFORE building rels file) ──────────
+  const extRelIds = [];
+  let extRelCounter = ents.length + 100;
+  for(let i=0;i<S.extSlots.length;i++){
+    const slot = S.extSlots[i];
+    if(slot && slot.photoBlob){
+      const relId = 'rIdExt' + i;
+      const fname = 'ext' + i + '.jpg';
+      extRelIds.push({relId, fname, picNum: extRelCounter++});
+      mediaFiles[fname] = await slot.photoBlob.arrayBuffer();
+    } else {
+      extRelIds.push({relId:null, fname:null, picNum: extRelCounter++});
+    }
+  }
+  const extImgRels = extRelIds.filter(r=>r.relId).map(r=>
+    '<Relationship Id="' + r.relId + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/' + r.fname + '"/>'
+  ).join('\n');
+
+  // Write all media files to ZIP (photo + external)
+  Object.entries(mediaFiles).forEach(([fname,ab])=>zip.file(`word/media/${fname}`,ab));
+
+  const imgRels = rels.filter(r=>r.relId).map(r=>
+    `<Relationship Id="${r.relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${r.fname}"/>`
+  ).join('\n');
+
+  const docNS = `xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 wp14"`;
+  const fnNS = docNS;
+
+  zip.file('word/_rels/document.xml.rels',
+    '<?xml version="1.0" encoding="utf-8"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+    + '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>'
+    + '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/>'
+    + '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes" Target="endnotes.xml"/>'
+    + imgRels
+    + (extImgRels ? '\n' + extImgRels : '')
+    + '</Relationships>');
+
+  // Load general info from localStorage
+  let info = {};
+  try{ info = JSON.parse(localStorage.getItem('pcs.generalInfo')||'{}'); }catch(e){}
+
+  const pageBreak = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+
+  // ── Page 1: Purpose + General Information ───────────────
+  const infoPage = buildInfoPage(b, info);
+
+  // ── Page 2: References (Burland 1977) ───────────────────
+  const refsPage = buildReferencesPage();
+
+  // ── Page 3: Location Map ────────────────────────────────
+  const locPage = buildLocationPage(info);
+
+  // ── Page 4+: Photo & Defect pages (6 per page) ──────────
+  const photoPages = [];
+  for(let i=0;i<ents.length;i+=6) photoPages.push(buildDocxPage(ents.slice(i,i+6),b,rels.slice(i,i+6)));
+
+  const extPage = (S.extSlots.some(s=>s&&s.photoBlob))
+    ? buildExternalViewsPage(S.extSlots, extRelIds)
+    : null;
+
+  // ── Assemble all pages ───────────────────────────────────
+  // ── Page order: Info → References → Location → External Views → Photos ──
+  const allPages = [infoPage, refsPage, locPage];
+  if(extPage) allPages.push(extPage);   // Page 4: External Views (before photos)
+  if(photoPages.length) photoPages.forEach(p=>allPages.push(p));  // Page 5+: Photos
+  else allPages.push('<w:p><w:r><w:t>No photo entries captured.</w:t></w:r></w:p>');
+
+  const bodyContent = allPages.join(pageBreak);
+
+  zip.file('word/document.xml',`<?xml version="1.0" encoding="utf-8"?>
+<w:document ${docNS}>
+<w:body>
+<w:p><w:pPr><w:spacing w:after="240"/><w:jc w:val="center"/></w:pPr>
+<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:cs="Calibri" w:eastAsia="Calibri" w:hAnsi="Calibri"/><w:b/><w:bCs/><w:color w:val="1F3864"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t xml:space="preserve">${xmlEscape(b.name)} - Survey Report</w:t></w:r>
+</w:p>
+${bodyContent}
+<w:p><w:pPr><w:spacing w:after="0"/><w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="360" w:footer="360" w:gutter="0"/></w:sectPr></w:pPr></w:p>
+</w:body>
+</w:document>`);
+
+  zip.file('word/styles.xml',`<?xml version="1.0" encoding="utf-8"?>
+<w:styles xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" mc:Ignorable="w14 w15">
+<w:docDefaults><w:rPrDefault/><w:pPrDefault/></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+<w:name w:val="Normal"/>
+<w:pPr><w:spacing w:after="0"/></w:pPr>
+<w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr>
+</w:style>
+</w:styles>`);
+
+  zip.file('word/settings.xml',`<?xml version="1.0" encoding="utf-8"?>
+<w:settings ${docNS}>
+<w:compat><w:compatSetting w:val="15" w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word"/></w:compat>
+</w:settings>`);
+
+  zip.file('word/footnotes.xml',`<?xml version="1.0" encoding="utf-8"?><w:footnotes ${fnNS}><w:footnote w:type="separator" w:id="-1"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:separator/></w:r></w:p></w:footnote><w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:continuationSeparator/></w:r></w:p></w:footnote></w:footnotes>`);
+  zip.file('word/endnotes.xml',`<?xml version="1.0" encoding="utf-8"?><w:endnotes ${fnNS}><w:endnote w:type="separator" w:id="-1"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:separator/></w:r></w:p></w:endnote><w:endnote w:type="continuationSeparator" w:id="0"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:continuationSeparator/></w:r></w:p></w:endnote></w:endnotes>`);
+
+  if(progressCb) progressCb(90);
+  const docxBlob = await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+  if(progressCb) progressCb(100);
+  return docxBlob;
+}
+
+
+/* ── EXPORT FUNCTIONS ──────────────────────────────────────── */
+async function exportSubmissionPackage(){
+  const btn = $('#btnExportSubmission');
+  if(!S.currentBuildingId){ toast('Select a building first','error'); return; }
+  const orig = btn.textContent; btn.disabled=true; btn.textContent='⏳ Exporting...';
+  try{
+    const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+    const docxBlob = await buildWordForBuilding(S.currentBuildingId);
+    const {wb, entries} = await buildExcelForBuilding(S.currentBuildingId);
+    const excelBuf = await wb.xlsx.writeBuffer();
+    const zip = new JSZip();
+    const dateStr = new Date().toISOString().slice(0,10);
+    const folder = zip.folder(b.name);
+    folder.file(`${b.name}.docx`, docxBlob);
+    folder.file(`${b.name}.xlsx`, excelBuf);
+    const pics = folder.folder('Pictures');
+    for(const e of entries){
+      const p = await idbGet('photos',e.id);
+      if(p && p.blob) pics.file(`${pad3(e.photoId)}.jpg`, p.blob);
+    }
+    const zipBlob = await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+    saveAs(zipBlob, `${b.name}_${dateStr}.zip`);
+    toast('Export complete','success');
+  }catch(err){ console.error(err); toast('Export failed: '+err.message,'error'); }
+  finally{ btn.disabled=false; btn.textContent=orig; }
+}
+
+async function exportWordOnly(){
+  if(!S.currentBuildingId){ toast('Select a building first','error'); return; }
+  const btn=$('#btnExportWordOnly'); const orig=btn.textContent;
+  btn.disabled=true; btn.textContent='⏳ Building Word...';
+  try{
+    const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+    const docxBlob = await buildWordForBuilding(S.currentBuildingId);
+    saveAs(docxBlob, `${b.name}_Report.docx`);
+    toast('Word exported','success');
+  }catch(err){ toast('Failed: '+err.message,'error'); }
+  finally{ btn.disabled=false; btn.textContent=orig; }
+}
+
+async function exportOne(opts={}){
+  if(!S.currentBuildingId){ toast('Select a building first','error'); return; }
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  const {wb, entries} = await buildExcelForBuilding(S.currentBuildingId);
+  const dateStr = new Date().toISOString().slice(0,10);
+  if(!opts.includePhotos){
+    const buf = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([buf]), `${b.name}_${dateStr}.xlsx`);
+    toast('Excel saved','success'); return;
+  }
+  const zip = new JSZip();
+  const buf = await wb.xlsx.writeBuffer();
+  zip.file(`${b.name}.xlsx`, buf);
+  const pics = zip.folder('Pictures');
+  for(const e of entries){
+    const p = await idbGet('photos',e.id);
+    if(p && p.blob) pics.file(`${pad3(e.photoId)}.jpg`, p.blob);
+  }
+  const zipBlob = await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+  saveAs(zipBlob, `${b.name}_${dateStr}.zip`);
+  toast('Excel + Photos ZIP saved','success');
+}
+
+async function exportAll(){
+  // SAFE: exports one building at a time to avoid browser memory crash.
+  // For 800 buildings, never put all photos into a single ZIP in RAM.
+  const btn=$('#btnExportAll'); const orig=btn.textContent;
+  const total = S.buildings.length;
+  if(!total){ toast('No buildings to export','error'); return; }
+  if(total > 20){
+    const ok = confirm(
+      `You have ${total} buildings.\n\n` +
+      `Exporting all at once may be slow.\n` +
+      `Each building will be saved as a separate ZIP file.\n\n` +
+      `Tip: For large surveys (50+ buildings), export per building from the Capture tab.\n\n` +
+      `Continue?`
+    );
+    if(!ok) return;
+  }
+  btn.disabled=true;
+  const dateStr = new Date().toISOString().slice(0,10);
+  let done=0, failed=0;
+  for(const b of S.buildings){
+    btn.textContent = `⏳ ${done+1}/${total} — ${b.name.slice(0,20)}`;
+    try{
+      const docxBlob = await buildWordForBuilding(b.id);
+      const {wb, entries} = await buildExcelForBuilding(b.id);
+      const excelBuf = await wb.xlsx.writeBuffer();
+      const zip = new JSZip();   // fresh ZIP per building — no memory accumulation
+      const folder = zip.folder(b.name);
+      folder.file(`${b.name}.docx`, docxBlob);
+      folder.file(`${b.name}.xlsx`, excelBuf);
+      const pics = folder.folder('Pictures');
+      for(const e of entries){
+        const p = await idbGet('photos',e.id);
+        if(p && p.blob) pics.file(`${pad3(e.photoId)}.jpg`, p.blob);
+      }
+      const zipBlob = await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+      saveAs(zipBlob, `${b.name}_${dateStr}.zip`);
+      done++;
+      // Small pause between saves so browser doesn't block
+      await new Promise(r=>setTimeout(r,300));
+    }catch(err){
+      console.error('Export failed for '+b.name, err);
+      failed++;
+    }
+  }
+  btn.disabled=false; btn.textContent=orig;
+  if(failed===0) toast(`✅ Exported ${done} buildings`,'success');
+  else toast(`Done: ${done} OK, ${failed} failed`,'error');
+}
+
+$('#btnExportSubmission').onclick = exportSubmissionPackage;
+$('#btnExportWordOnly').onclick = exportWordOnly;
+$('#btnExportOne').onclick = ()=>exportOne({includePhotos:true});
+$('#btnExportExcelOnly').onclick = ()=>exportOne({includePhotos:false});
+$('#btnExportAll').onclick = exportAll;
+
+async function renderExportSummary(){
+  let total=0, defects=0;
+  for(const b of S.buildings){
+    const ents = await idbGetByIdx('entries','byBuilding',b.id);
+    total += ents.length;
+    defects += ents.filter(e=>isDefect(e.condition)).length;
+  }
+  S.allEntriesCount = total;
+  $('#expPhotos').textContent = total;
+  $('#expBlds').textContent = S.buildings.length;
+  $('#expDef').textContent = defects;
+  // Update banner stats
+  const bb = document.getElementById('bannerBlds');
+  const be = document.getElementById('bannerEntries');
+  const bd = document.getElementById('bannerDefects');
+  if(bb) bb.textContent = S.buildings.length;
+  if(be) be.textContent = total;
+  if(bd) bd.textContent = defects;
+  checkStorageUsage();
+}
+
+/* ── BACKUP / RESTORE ──────────────────────────────────────── */
+$('#btnBackup').onclick = async ()=>{
+  const blds = await idbGetAll('buildings');
+  const ents = await idbGetAll('entries');
+  const photos = [];
+  for(const e of ents){
+    const p = await idbGet('photos',e.id);
+    if(p && p.blob){ const b64 = await blobToB64(p.blob); photos.push({entryId:e.id,b64}); }
+  }
+  const data = {project:S.project,buildings:blds,entries:ents,photos,savedAt:Date.now(),version:2};
+  saveAs(new Blob([JSON.stringify(data)],{type:'application/json'}),`pcs_backup_${new Date().toISOString().slice(0,10)}.json`);
+  toast('Backup saved','success');
+};
+$('#btnRestore').onclick = ()=>$('#restoreInput').click();
+$('#restoreInput').onchange = async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const text = await f.text(); const data = JSON.parse(text);
+  if(!confirm(`Restore ${data.buildings.length} buildings & ${data.entries.length} entries? Existing data will be merged.`)) return;
+  for(const b of data.buildings) await idbPut('buildings',b);
+  for(const e of data.entries) await idbPut('entries',e);
+  for(const p of (data.photos||[])){
+    const blob = await b64ToBlob(p.b64,'image/jpeg');
+    await idbPut('photos',{entryId:p.entryId,blob});
+  }
+  await loadBuildings(); await loadEntries(); renderExportSummary();
+  toast('Restore complete','success');
+};
+/* ── CLEAR CURRENT BUILDING ──────────────────────────────── */
+$('#btnClearBuilding').onclick = ()=>{
+  if(!S.currentBuildingId){ toast('No building selected','error'); return; }
+  const b = S.buildings.find(x=>x.id===S.currentBuildingId);
+  if(!b) return;
+  openModal(
+    '<h2>Clear building data?</h2>' +
+    '<p style="color:var(--g4);font-size:13.5px;line-height:1.6">' +
+    'This will delete all <strong>' + (S.entries.length) + ' entries and photos</strong> for:<br>' +
+    '<strong>' + b.name + '</strong><br><br>' +
+    '⚠️ Make sure you have already exported this building before clearing!' +
+    '</p>' +
+    '<div class="actions">' +
+    '<button class="cancel" onclick="closeModal()">Cancel</button>' +
+    '<button class="danger" id="confirmClearBld">Clear entries &amp; photos</button>' +
+    '</div>'
+  );
+  document.getElementById('confirmClearBld').onclick = async ()=>{
+    const ents = await idbGetByIdx('entries','byBuilding',S.currentBuildingId);
+    for(const e of ents){ await idbDel('entries',e.id); await idbDel('photos',e.id); }
+    // Reset next photo ID counter
+    b.nextPhotoId = 1;
+    await idbPut('buildings', b);
+    await loadEntries();
+    await refreshFromBuilding();
+    renderExportSummary();
+    closeModal();
+    toast('Building data cleared — ready for next survey','success');
+  };
+};
+
+/* ── STORAGE USAGE CHECK ─────────────────────────────────── */
+async function checkStorageUsage(){
+  const el = document.getElementById('storageInfo');
+  if(!el) return;
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      const est = await navigator.storage.estimate();
+      const used = (est.usage/1024/1024).toFixed(1);
+      const quota = est.quota ? (est.quota/1024/1024/1024).toFixed(1)+'GB' : 'unknown';
+      const pct = est.quota ? Math.round(est.usage/est.quota*100) : '?';
+      const color = pct > 70 ? 'var(--red)' : pct > 40 ? 'var(--orange)' : 'var(--green)';
+      el.innerHTML = '📦 Storage used: <strong style="color:'+color+'">' + used + ' MB ('+pct+'%)</strong> of '+quota+'<br>' +
+        '📸 Buildings: '+S.buildings.length+' · Entries: '+S.allEntriesCount;
+    } else {
+      el.textContent = '📦 Storage estimate not available on this browser.';
+    }
+  }catch(e){ el.textContent = '📦 Storage: unable to estimate'; }
+}
+
+$('#btnClearAll').onclick = ()=>{
+  openModal(`<h2>Clear ALL data?</h2><p style="color:var(--g4);font-size:13.5px;line-height:1.5">Every building, entry, and photo will be deleted. <strong>Backup first!</strong></p>
+  <div class="actions"><button class="cancel" onclick="closeModal()">Cancel</button><button class="danger" id="confirmClear">Clear everything</button></div>`);
+  $('#confirmClear').onclick = async ()=>{
+    await idbClear('buildings'); await idbClear('entries'); await idbClear('photos');
+    S.currentBuildingId=null;
+    await loadBuildings(); await loadEntries(); renderExportSummary();
+    closeModal(); toast('All data cleared','success');
+  };
+};
+
+function blobToB64(blob){ return new Promise((r)=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(blob); }); }
+async function b64ToBlob(b64){ const res = await fetch(b64); return res.blob(); }
+
+/* ── SETTINGS ──────────────────────────────────────────────── */
+$('#settingsBtn').onclick = ()=>{
+  openModal(`
+    <h2>Settings</h2>
+    <label>Project name</label>
+    <input type="text" id="set_project" value="${escapeAttr(S.project)}">
+    <label style="margin-top:14px">Date/Time stamp on photos</label>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--g1);padding:10px;border-radius:9px">
+      <input type="checkbox" id="set_stamp" ${S.stampDisabled?'':'checked'} style="width:20px;height:20px;accent-color:var(--orange)">
+      <label for="set_stamp" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--text);flex:1;cursor:pointer">
+        Burn date + time on every photo<br>
+        <span style="color:var(--g3);font-size:11px;font-weight:400">Orange text, bottom-right · ${formatStampDate(new Date())}</span>
+      </label>
+    </div>
+    <label style="margin-top:14px">About</label>
+    <div class="hint-text" style="font-size:12px;line-height:1.5;background:var(--g1);padding:10px;border-radius:8px">
+      <strong>PCS Survey v5</strong> — Pre-Condition Survey field tool.<br>
+      All data stays on this device. Export regularly.<br>
+      ${S.allEntriesCount} entries total
+    </div>
+    <div class="actions">
+      <button class="cancel" onclick="closeModal()">Close</button>
+      <button class="go" id="set_save">Save</button>
+    </div>
+  `);
+  $('#set_save').onclick = ()=>{
+    const v = $('#set_project').value.trim() || 'PCS Survey';
+    S.project = v; localStorage.setItem('pcs.project',v);
+    document.getElementById('projectTitle').textContent = 'PCS Survey ALT — BUILDING';
+    S.stampDisabled = !$('#set_stamp').checked;
+    localStorage.setItem('pcs.stampDisabled', S.stampDisabled?'1':'0');
+    updateTopbar(); closeModal(); toast('Saved','success');
+  };
+};
+
+/* ── UTIL ──────────────────────────────────────────────────── */
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* ── BOOT ──────────────────────────────────────────────────── */
+(async function boot(){
+  await openDB();
+  await loadBuildings();
+  await loadEntries();
+  await refreshFromBuilding();
+  loadGeneralInfo();
+
+  // Initialize external view slots
+  setExtCount(4);
+
+  // Set today's date as default in info tab
+  const dateEl = document.getElementById('inf_date');
+  if(dateEl && !dateEl.value){
+    dateEl.value = new Date().toISOString().slice(0,10);
+  }
+
+  if(!S.buildings.length){
+    setTimeout(()=>promptNewBuilding(),400);
+  }
+
+  // Service Worker for offline
+  if('serviceWorker' in navigator){
+    const swCode = `
+      const CACHE='pcs-v5';
+      self.addEventListener('install',e=>{self.skipWaiting()});
+      self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});
+      self.addEventListener('fetch',e=>{
+        e.respondWith(
+          caches.open(CACHE).then(async c=>{
+            const r = await c.match(e.request);
+            if(r) return r;
+            try{ const net = await fetch(e.request); if(e.request.method==='GET' && net.ok) c.put(e.request,net.clone()); return net; }
+            catch(_){ return r || new Response('offline',{status:503}); }
+          })
+        );
+      });`;
+    const blob = new Blob([swCode],{type:'application/javascript'});
+    const url = URL.createObjectURL(blob);
+    try{ await navigator.serviceWorker.register(url); }catch(_){}
+  }
+})();
+
+window.addEventListener('beforeunload', e=>{
+  if(S.photoBlob || (document.getElementById('descInput') && document.getElementById('descInput').value)){
+    e.preventDefault(); e.returnValue='';
+  }
+});
+</script>
+</body>
+</html>
